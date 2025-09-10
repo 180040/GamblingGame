@@ -1,0 +1,1376 @@
+"""Imports"""
+import tkinter as tk
+import random
+import math
+import time
+import json
+from tkinter import simpledialog, messagebox
+from collections import Counter
+
+"""Tk stuff"""
+root = tk.Tk()
+root.title("Cooper's gambling game")
+canvas = tk.Canvas(root, width=700, height=400, bg="white")
+canvas.pack()
+
+"""More TK stuff, the visible stuff tho"""
+main_area = canvas.create_rectangle(100, 0, 700, 400, fill="white", tags="main")
+table = canvas.create_oval(130, -300, 670, 300, fill="green", outline="", tags="table")
+button_width = 100
+button_height = 80
+text_font = ("Helvetica", 11, "bold")
+roulette_button = canvas.create_rectangle(0, 0, button_width, button_height,fill="green", tags="roulette", outline="")
+roulette_text = canvas.create_text(button_width/2, button_height/2,text="Roulette", fill="white", font=text_font, tags="roulette")
+blackjack_button = canvas.create_rectangle(0, button_height, button_width, button_height*2,fill="red", tags="blackjack", outline="")
+blackjack_text = canvas.create_text(button_width/2, button_height*1.5,text="Blackjack", fill="white", font=text_font, tags="blackjack")
+slots_button = canvas.create_rectangle(0, button_height*2, button_width, button_height*3,fill="blue", tags="slots", outline="")
+slots_text = canvas.create_text(button_width/2, button_height*2.5,text="Slots", fill="white", font=text_font, tags="slots")
+poker_button = canvas.create_rectangle(0, button_height*3, button_width, button_height*4,fill="black", tags="poker", outline="")
+poker_text = canvas.create_text(button_width/2, button_height*3.5,text="Poker", fill="white", font=text_font, tags="poker")
+scoreboard_button = canvas.create_rectangle(0, button_height*4, button_width, button_height*5,fill="purple", tags="scoreboard", outline="")
+scoreboard_text = canvas.create_text(button_width/2, button_height*4.5,text="Scoreboard", fill="white", font=text_font, tags="scoreboard")
+table = canvas.create_oval(130, -300, 670, 300, fill="green", outline="", tags="table")
+main_text = canvas.create_text (400, 50, text="Select", fill="black", font=("Helvetica", 24, "bold"))
+money_text = canvas.create_text(400, 375, text=f"$0", fill="black", font=("Helvetica", 30, "bold"), tags="money_text")
+
+
+"""Variable"""
+roulette = "roulette"
+blackjack = "blackjack"
+slots = "slots"
+poker = "poker"
+hit = "hit"
+stand = "stand"
+fold = "fold"
+check = "check"
+raise_ = "raise"
+spin = "spin"
+bet = "bet"
+roll = "roll"
+cards_UI = []
+player_hand = []
+game_selected = None
+hit_able = True
+poker_able = True
+raise_able = True
+player_money = 100
+poker_middle = 10
+hand_value = 0
+AI_added = 0
+AI2_added = 0
+player_added = 0
+player_folded = False
+cheated = False
+AI1_folded = False
+AI2_folded = False
+AI_folded = []
+dealer_UI = []
+slots_nums = []
+dealer_hand = []
+AI_chips = []
+AI2_chips = []
+slot_machine = 0
+slots_bet = 0
+AI_hand = []
+AI_UI = []
+AI2_UI = []
+AI2_hand = []
+blackjack_UI = []
+player_chips = []
+poker_UI = []
+roulette_UI = []
+slots_UI = []
+red_suits = ["♥", "♦"]
+poker_middle_text = None
+poker_round = 0
+spin_able = True
+roulette_bets = []
+arcs = []
+speed = 100
+ball = 0
+highest_money = 0
+angle = 0
+slot_extra_UI = []
+wheel_angle = 0
+slots_able = True
+need_player_to_match = False
+rank_map = {"2":2,"3":3,"4":4,"5":5,"6":6,"7":7,
+            "8":8,"9":9,"10":10,"J":11,"Q":12,"K":13,"A":14}
+HAND_NAMES = {
+    9: "Royal Flush",
+    8: "Straight Flush",
+    7: "Four of a Kind",
+    6: "Full House",
+    5: "Flush",
+    4: "Straight",
+    3: "Three of a Kind",
+    2: "Two Pair",
+    1: "One Pair",
+    0: "High Card"
+}
+
+def init_deck():
+    return [
+        "2♠","3♠","4♠","5♠","6♠","7♠","8♠","9♠","10♠","J♠","Q♠","K♠","A♠",
+        "2♥","3♥","4♥","5♥","6♥","7♥","8♥","9♥","10♥","J♥","Q♥","K♥","A♥",
+        "2♦","3♦","4♦","5♦","6♦","7♦","8♦","9♦","10♦","J♦","Q♦","K♦","A♦",
+        "2♣","3♣","4♣","5♣","6♣","7♣","8♣","9♣","10♣","J♣","Q♣","K♣","A♣"
+    ]
+
+cards = init_deck()
+SCORE_FILE = "highscores.json"
+
+def load_scores():
+    """Load the scores from the json list saved LOCALLY"""
+    try:
+        with open(SCORE_FILE, "r") as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return []  
+
+def save_scores(scores):
+    """Save the scores to the json list"""
+    with open(SCORE_FILE, "w") as f:
+        json.dump(scores, f, indent=4)
+
+def clear_scores():
+    """Clears the scores so I can clear the list after patching bugs"""
+    with open("highscores.json", "w") as f:
+        f.write("[]")
+
+def update_score(player, score):
+    """Updates the scores, avoiding repeating the same named user"""
+    scores = load_scores()
+    found = False
+    for entry in scores:
+        if entry["name"] == player:
+            if score > entry["score"]:
+                entry["score"] = score
+            found = True
+            break
+    if not found:
+        scores.append({"name": player, "score": score})
+    scores = sorted(scores, key=lambda x: x["score"], reverse=True)[:10]
+    save_scores(scores)
+
+def show_leaderboard():
+    """Shows the leaderboard as a pop-up"""
+    scores = load_scores()
+    if not scores:
+        messagebox.showinfo("Leaderboard", "No scores yet!")
+        return
+    leaderboard = "\n".join([f"{i+1}. {s['name']}: ${s['score']}" for i, s in enumerate(scores)])
+    messagebox.showinfo("Leaderboard", f"Highest earnings:\n{leaderboard}")
+
+def poker_middle_update():
+    """Updates the amount in the middle of the poker round"""
+    global poker_middle_text, poker_middle, game_selected
+    if game_selected == poker and poker_middle > 10:
+        if poker_middle_text is None:
+            poker_middle_text = canvas.create_text(350, 200, text=f"${poker_middle}", fill="black", font=("Helvetica", 20, "bold"))
+        else:
+            canvas.itemconfig(poker_middle_text, text=f"${poker_middle}")
+    else:
+        if poker_middle_text is not None:
+            canvas.delete(poker_middle_text)
+            poker_middle_text = None
+    root.after(50, poker_middle_update)
+
+def clean_UI():
+    """Clears the UI"""
+    global blackjack_UI, poker_UI, slots_UI, roulette_UI, arcs, ball, slot_extra_UI, slots, slots_nums
+    for ui_list in [blackjack_UI, poker_UI, slots_UI, roulette_UI]:
+        for ui_item in ui_list:
+            canvas.delete(ui_item)
+        ui_list.clear()
+    for arc in arcs:
+        canvas.delete(arc)
+    canvas.delete(ball)
+    for slot_UI_ in slot_extra_UI:
+        canvas.delete(slot_UI_)
+    for slot in slots:
+        canvas.delete(slot)
+    for slot in slots_nums:
+        canvas.delete(slot)
+    slots = []
+    slots_nums = []
+    slot_extra_UI = []
+
+def place_bet():
+    """Places the bet, one of the most useful functions"""
+    global player_money, game_selected
+    bet = simpledialog.askinteger("Place Bet", f"You have ${player_money}. Enter your bet:")
+    if bet is None:
+        return False
+    elif bet > player_money:
+        awns_bool = messagebox.askquestion("All-IN?", "Are you sure you want to go all-in?")
+        return player_money
+    elif bet == 0:
+        messagebox.showerror("Error", "Zero cannot be placed as a bet")
+        return place_bet()
+    else:
+        return bet
+
+def roulette_game():
+    """Setup for roulette"""
+    global arcs, roulette_UI
+    arcs = []
+    canvas.itemconfig(main_text, text="Roulette")
+    canvas.tag_raise(main_text)
+    clean_UI()
+    generate_wheel()
+    spin_button = canvas.create_rectangle(600, 350, 700, 400, fill="lime", tags = "spin")
+    spin_text = canvas.create_text(650, 375, text="Spin", fill="black", font=("Helvetica", 22, "bold"), tags = "spin")
+    bet_button = canvas.create_rectangle(600, 300, 700, 350, fill="cyan", tags = "bet")
+    bet_text = canvas.create_text(650, 325, text="Bet", fill="black", font=("Helvetica", 22, "bold"), tags = "bet")
+    roulette_UI.append(spin_button)
+    roulette_UI.append(spin_text)
+    roulette_UI.append(bet_button)
+    roulette_UI.append(bet_text)
+    
+def blackjack_game(bet_amount):
+    """Setup for blackjack"""
+    global player_money, hand_text, hit_able, blackjack_UI
+    clean_UI()
+    canvas.tag_raise(main_text)
+    canvas.itemconfig(main_text, text="Blackjack")
+    hit_able = True
+    player_money -= bet_amount
+    hit_button = canvas.create_rectangle(600, 350, 700, 400, fill="lime", tags = "hit")
+    hit_text = canvas.create_text(650, 375, text="Hit", fill="black", font=("Helvetica", 30, "bold"), tags = "hit")
+    stand_button = canvas.create_rectangle(600, 300, 700, 350, fill="yellow", tags = "stand")
+    stand_text = canvas.create_text(650, 325, text="Stand", fill="black", font=("Helvetica", 22, "bold"), tags = "stand")
+    hand_text = canvas.create_text(400, 325, text="Hand value:", fill="black", font=("Helvetica", 22, "bold"))
+    blackjack_UI.append(hit_button)
+    blackjack_UI.append(hand_text)
+    blackjack_UI.append(hit_text)
+    blackjack_UI.append(stand_button)
+    blackjack_UI.append(stand_text)
+    deal_to_house(1, False)
+    deal_to_house(1, True)
+    deal_to_player(2)
+    check_player_hand_blackjack()
+    
+def slots_game():
+    """Setup for slots"""
+    global slots_UI, slot_extra_UI
+    clean_UI()
+    slot_machine = canvas.create_rectangle(100, 0, 700, 400, fill="silver")
+    slot_puller_1 = canvas.create_rectangle(625, 100, 675, 300, fill="black")
+    slot_puller_2 = canvas.create_rectangle(645, 230, 655, 125, fill="red")
+    slot_puller_3 = canvas.create_oval(635, 145, 665, 115, fill="gold")
+    slot_extra_UI.append(slot_puller_3)
+    slot_extra_UI.append(slot_puller_2)
+    slot_extra_UI.append(slot_puller_1)
+    slot_extra_UI.append(slot_machine)
+    canvas.tag_raise(main_text)
+    canvas.tag_raise(money_text)
+    canvas.itemconfig(main_text, text="Slots")
+    roll_button = canvas.create_rectangle(600, 350, 700, 400, fill="lime", tags = "roll")
+    roll_text = canvas.create_text(650, 375, text="Spin", fill="black", font=("Helvetica", 22, "bold"), tags = "roll")
+    slots_UI.append(roll_button)
+    slots_UI.append(roll_text)
+    create_slots()
+    
+def poker_game():
+    """Setup for poker"""
+    global poker_UI
+    clean_UI()
+    canvas.tag_raise(main_text)
+    canvas.itemconfig(main_text, text="Poker")
+    raise_button = canvas.create_rectangle(600, 350, 700, 400, fill="lime", tags = "raise")
+    raise_text = canvas.create_text(650, 375, text="Raise", fill="black", font=("Helvetica", 22, "bold"), tags = "raise")
+    fold_button = canvas.create_rectangle(600, 300, 700, 350, fill="red", tags = "fold")
+    fold_text = canvas.create_text(650, 325, text="Fold", fill="black", font=("Helvetica", 24, "bold"), tags = "fold")
+    check_button = canvas.create_rectangle(600, 250, 700, 300, fill="cyan", tags = "check")
+    check_text = canvas.create_text(650, 275, text="Check", fill="black", font=("Helvetica", 22, "bold"), tags = "check")
+    poker_UI.append(raise_button)
+    poker_UI.append(raise_text)
+    poker_UI.append(fold_button)
+    poker_UI.append(fold_text)
+    poker_UI.append(check_button)
+    poker_UI.append(check_text)
+    cards = init_deck()
+    deal_to_house(5, True)
+    AI_player_deal(2, True)
+    AI_player2_deal(2, True)
+    deal_to_player(2)
+
+def create_slots():
+    """Creates the slots for the slot machine"""
+    global slots
+    slot1 = canvas.create_rectangle(183, 100, 250, 300, fill="white")
+    slot2 = canvas.create_rectangle(283, 100, 350, 300, fill="white")
+    slot3 = canvas.create_rectangle(383, 100, 450, 300, fill="white")
+    slot4 = canvas.create_rectangle(483, 100, 550, 300, fill="white")
+    slots.append(slot1)
+    slots.append(slot2)
+    slots.append(slot3)
+    slots.append(slot4)
+    
+
+def deal_to_house(num_new_cards, hidden=False):
+    """Deals card to the dealer, allows to be hidden"""
+    global dealer_UI, dealer_hand, cards
+    card_y_start = 100
+    card_y_size = 50
+    card_x_size = 30
+    card_gap = 10
+    center_x = 400
+    if num_new_cards > 0:
+        for _ in range(num_new_cards):
+            if not cards:
+                cards = init_deck()
+            card_value = random.choice(cards)
+            cards.remove(card_value)
+            dealer_hand.append((card_value, hidden)) 
+    elif num_new_cards < 0:
+        num_to_reveal = -num_new_cards
+        revealed = 0
+        for i, (card_value, is_hidden) in enumerate(dealer_hand):
+            if is_hidden:
+                dealer_hand[i] = (card_value, False)
+                revealed += 1
+                if revealed >= num_to_reveal:
+                    break
+    total_cards = len(dealer_hand)
+    total_width = total_cards * card_x_size + (total_cards - 1) * card_gap
+    start_x = center_x - total_width // 2
+    for i, (card_value, is_hidden) in enumerate(dealer_hand):
+        x1 = start_x + i * (card_x_size + card_gap)
+        y1 = card_y_start
+        x2 = x1 + card_x_size
+        y2 = y1 + card_y_size
+        if i >= len(dealer_UI):
+            if is_hidden:
+                card_body = canvas.create_rectangle(x1, y1, x2, y2, fill="grey")
+                card_text = canvas.create_text((x1+x2)/2, (y1+y2)/2, text="", fill="black", font=("Helvetica", 12, "bold"))
+            else:
+                card_body = canvas.create_rectangle(x1, y1, x2, y2, fill="white")
+                text_color = "red" if card_value[-1] in red_suits else "black"
+                card_text = canvas.create_text((x1+x2)/2, (y1+y2)/2, text=card_value, fill=text_color, font=("Helvetica", 12, "bold"))
+            dealer_UI.append((card_body, card_text))
+        else:
+            canvas.coords(dealer_UI[i][0], x1, y1, x2, y2)
+            canvas.coords(dealer_UI[i][1], (x1+x2)/2, (y1+y2)/2)
+            if is_hidden:
+                canvas.itemconfig(dealer_UI[i][0], fill="grey")
+                canvas.itemconfig(dealer_UI[i][1], text="", fill="black")
+            else:
+                canvas.itemconfig(dealer_UI[i][0], fill="white")
+                canvas.itemconfig(dealer_UI[i][1], text=card_value, fill="red" if card_value[-1] in red_suits else "black")
+
+def generate_wheel():
+    """Generates the roulette wheel"""
+    global arcs, speed, spin_able, ball
+    speed = 100
+    nums = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
+    for i, num in enumerate(nums):
+        start = (360 / len(nums)) * i
+        extent = 360 / len(nums)
+        if num != 0:
+            if i % 2 == 0:
+                colour = "black"
+            else:
+                colour = "red"
+        else:
+            colour = "green"
+        arc = canvas.create_arc(300, 75, 500, 275, start=start, extent=extent, fill=colour, outline="gold")
+        arcs.append(arc)
+    ball = canvas.create_oval(395, 95, 405, 105, fill="white")
+
+def spin_wheel():
+    """Spins the roulette wheel"""
+    global arcs, speed, spin_able, wheel_angle, game_selected
+    if game_selected == roulette:
+        speed *= 0.985
+        wheel_angle = (wheel_angle + speed) % 360
+        ball_spin(speed)
+        for arc in arcs:
+            start_angle_str = canvas.itemcget(arc, "start")
+            start_angle_flt = float(start_angle_str)
+            start_angle_flt += speed
+            canvas.itemconfig(arc, start=start_angle_flt)
+        if speed > 0.5:
+            spin_able = False
+            root.after(30, spin_wheel)
+        else:
+            spin_able = True
+            check_ball_location()
+
+
+"""The following two functions are just GUI 'animations' for the slot machine"""
+def lever_pull():
+    global slot_extra_UI
+    if slot_extra_UI:
+        canvas.coords(slot_extra_UI[1], 645, 270, 655, 175)
+        canvas.coords(slot_extra_UI[0], 635, 255, 665, 285)
+def lever_retract():
+    global slot_extra_UI
+    if slot_extra_UI:
+        canvas.coords(slot_extra_UI[1], 645, 230, 655, 125)
+        canvas.coords(slot_extra_UI[0], 635, 145, 665, 115)
+
+def slots_spin():
+    """randomise the numbers at a fast pace to simulate a slot machine
+    the random nature of the 'spin' allows me to just go straight to comparing if the user wins or not"""
+    global slots_nums, slots_able 
+    if slots_able:
+        if not slots_nums:
+            for j in range(4):
+                slot_num = canvas.create_text(217 + 100*j, 200, text="7", font=("Helvetica", 20, "bold"))
+                slots_nums.append(slot_num)
+        if slots_nums:
+            steps = random.randint(50, 150)
+            def step(i=0):
+                if i < steps:
+                    for slot_num in slots_nums:
+                        randnum = random.randint(0, 7)
+                        canvas.itemconfig(slot_num, text=randnum)
+                    def call_next():
+                        step(i+1)
+                    canvas.after(20, call_next)
+                else:
+                    slots_able = True
+                    canvas.after(50, end_spin)
+                    lever_retract()
+            slots_able = False        
+            step()
+
+def end_spin():
+    """After the slot machine this runs, giving the player money"""
+    global slots_able, slots_nums, player_money, slots_bet
+    slots_able = True
+    slot_nums = [int(canvas.itemcget(slot, "text")) for slot in slots_nums]
+    counts = Counter(slot_nums)
+    freq = sorted(counts.values(), reverse=True)
+    if freq[0] == 4:
+        player_money += slots_bet * 100
+        messagebox.showinfo("Quad!", f"Quadruple! +${slots_bet * 100}")
+    elif freq[0] == 3:
+        player_money = player_money + slots_bet * 50
+        messagebox.showinfo("Triple!", f"Triple! +${slots_bet * 50}")
+    elif freq[0] == 2:
+        if len(freq) == 2:
+            player_money = player_money + slots_bet * 10
+            messagebox.showinfo("2xPairs!", f"Two pairs! +${slots_bet * 10}")
+        else:
+            player_money = player_money + slots_bet * 3
+            messagebox.showinfo("Pair!", f"Pair! +${slots_bet * 3}")
+    else:
+        messagebox.showinfo("Nothing!", f"Nothing! -${slots_bet}")
+
+def ball_spin(speed):
+    """Spins the ball for roulette"""
+    global ball, angle
+    cx, cy, r = 400, 175, 85
+    angle += speed * -0.96
+    bx = cx + math.cos(math.radians(angle)) * r 
+    by = cy - math.sin(math.radians(angle)) * r 
+    ball_radius = 5
+    canvas.coords(ball, bx-ball_radius, by-ball_radius, bx+ball_radius, by+ball_radius)
+
+def check_ball_location():
+    """Check the balls location relative to the wheel"""
+    global arcs, ball
+    if not arcs or not ball:
+        return
+    x1, y1, x2, y2 = canvas.coords(arcs[0])
+    cx = (x1 + x2) / 2
+    cy = (y1 + y2) / 2
+    bx0, by0, bx1, by1 = canvas.coords(ball)
+    bx = (bx0 + bx1) / 2
+    by = (by0 + by1) / 2
+    ball_angle = (math.degrees(math.atan2(cy - by, bx - cx))) % 360
+    closest_arc = None
+    closest_index = None
+    closest_diff = float("inf")
+    for i, arc in enumerate(arcs):
+        try:
+            start = float(canvas.itemcget(arc, "start")) % 360
+            extent = float(canvas.itemcget(arc, "extent"))
+        except Exception:
+            continue
+        arc_center = (start + extent / 2.0) % 360
+        diff = abs((ball_angle - arc_center + 180) % 360 - 180)
+        if diff < closest_diff:
+            closest_diff = diff
+            closest_arc = arc
+            closest_index = i
+    for arc in arcs:
+        canvas.itemconfig(arc, outline="gold", width=1)
+    if closest_arc is not None:
+        canvas.itemconfig(closest_arc, outline="lime", width=3)
+        winner_color = canvas.itemcget(closest_arc, "fill")
+    else:
+        print("No arc found.")
+    win(winner_color)
+
+def win(winner_color):
+    """As the player can place multiple bets, I used the method
+    of going through all bets and rewarding them seperately"""
+    global roulette_bets, player_money
+    for colour, bet_amont in roulette_bets:
+        if colour == winner_color:
+            if winner_color != "green":
+                player_money += bet_amont * 2
+            else:
+                player_money += bet_amont * 10
+    roulette_bets = [] # clear to avoid repition
+            
+def deal_to_player(num_new_cards):
+    """Deal cards to the player, no need to be hidden"""
+    global cards_UI, player_hand, cards
+    card_y_start = 225
+    card_y_size = 50
+    card_x_size = 30
+    card_gap = 10
+    center_x = 400
+    for _ in range(num_new_cards):
+        if not cards:
+            cards = init_deck()
+        card_value = random.choice(cards)
+        cards.remove(card_value)
+        player_hand.append(card_value)
+    total_cards = len(player_hand)
+    total_width = total_cards * card_x_size + (total_cards - 1) * card_gap
+    start_x = center_x - total_width // 2
+    for i, card_value in enumerate(player_hand):
+        if i >= len(cards_UI):
+            x1 = start_x + i * (card_x_size + card_gap)
+            y1 = card_y_start
+            x2 = x1 + card_x_size
+            y2 = y1 + card_y_size
+            card_body = canvas.create_rectangle(x1, y1, x2, y2, fill="white")
+            text_color = "red" if card_value[-1] in red_suits else "black"
+            card_text = canvas.create_text((x1+x2)/2, (y1+y2)/2, text=card_value, fill=text_color, font=("Helvetica", 12, "bold"))
+            cards_UI.append((card_body, card_text))
+        else:
+            x1 = start_x + i * (card_x_size + card_gap)
+            y1 = card_y_start
+            x2 = x1 + card_x_size
+            y2 = y1 + card_y_size
+            canvas.coords(cards_UI[i][0], x1, y1, x2, y2)
+            canvas.coords(cards_UI[i][1], (x1+x2)/2, (y1+y2)/2)
+    if game_selected == blackjack:
+        check_player_hand_blackjack()
+
+def AI_player_deal(num_new_cards, hidden=False):
+    """Deals to the first 'AI's position, allows to be hidden"""
+    global AI_UI, AI_hand, cards
+    card_y_start = 50
+    card_y_size = 50
+    card_x_size = 30
+    card_gap = 10
+    center_x = 200
+    if num_new_cards > 0:
+        for _ in range(num_new_cards):
+            if not cards:
+                cards = init_deck()
+            card_value = random.choice(cards)
+            cards.remove(card_value)
+            AI_hand.append((card_value, hidden)) 
+    elif num_new_cards < 0:
+        num_to_reveal = -num_new_cards
+        revealed = 0
+        for i, (card_value, is_hidden) in enumerate(AI_hand):
+            if is_hidden:
+                AI_hand[i] = (card_value, False)
+                revealed += 1
+                if revealed >= num_to_reveal:
+                    break
+    total_cards = len(AI_hand)
+    total_width = total_cards * card_x_size + (total_cards - 1) * card_gap
+    start_x = center_x - total_width // 2
+    for i, (card_value, is_hidden) in enumerate(AI_hand):
+        x1 = start_x + i * (card_x_size + card_gap)
+        y1 = card_y_start
+        x2 = x1 + card_x_size
+        y2 = y1 + card_y_size
+        if i >= len(AI_UI):
+            if is_hidden:
+                card_body = canvas.create_rectangle(x1, y1, x2, y2, fill="grey")
+                card_text = canvas.create_text((x1+x2)/2, (y1+y2)/2, text="", fill="black", font=("Helvetica", 12, "bold"))
+            else:
+                card_body = canvas.create_rectangle(x1, y1, x2, y2, fill="white")
+                text_color = "red" if card_value[-1] in red_suits else "black"
+                card_text = canvas.create_text((x1+x2)/2, (y1+y2)/2, text=card_value, fill=text_color, font=("Helvetica", 12, "bold"))
+            AI_UI.append((card_body, card_text))
+        else:
+            canvas.coords(AI_UI[i][0], x1, y1, x2, y2)
+            canvas.coords(AI_UI[i][1], (x1+x2)/2, (y1+y2)/2)
+            if is_hidden:
+                canvas.itemconfig(AI_UI[i][0], fill="grey")
+                canvas.itemconfig(AI_UI[i][1], text="", fill="black")
+            else:
+                canvas.itemconfig(AI_UI[i][0], fill="white")
+                canvas.itemconfig(AI_UI[i][1], text=card_value, fill="red" if card_value[-1] in red_suits else "black")
+
+def AI_player2_deal(num_new_cards, hidden=False):
+    """Deals to the second 'AI's position, allows to be hidden"""
+    global AI2_UI, AI2_hand, cards
+    card_y_start = 50
+    card_y_size = 50
+    card_x_size = 30
+    card_gap = 10
+    center_x = 600
+    if num_new_cards > 0:
+        for _ in range(num_new_cards):
+            if not cards:
+                cards = init_deck()
+            card_value = random.choice(cards)
+            cards.remove(card_value)
+            AI2_hand.append((card_value, hidden)) 
+    elif num_new_cards < 0:
+        num_to_reveal = -num_new_cards
+        revealed = 0
+        for i, (card_value, is_hidden) in enumerate(AI2_hand):
+            if is_hidden:
+                AI2_hand[i] = (card_value, False)
+                revealed += 1
+                if revealed >= num_to_reveal:
+                    break
+    total_cards = len(AI2_hand)
+    total_width = total_cards * card_x_size + (total_cards - 1) * card_gap
+    start_x = center_x - total_width // 2
+    for i, (card_value, is_hidden) in enumerate(AI2_hand):
+        x1 = start_x + i * (card_x_size + card_gap)
+        y1 = card_y_start
+        x2 = x1 + card_x_size
+        y2 = y1 + card_y_size
+        if i >= len(AI2_UI):
+            if is_hidden:
+                card_body = canvas.create_rectangle(x1, y1, x2, y2, fill="grey")
+                card_text = canvas.create_text((x1+x2)/2, (y1+y2)/2, text="", fill="black", font=("Helvetica", 12, "bold"))
+            else:
+                card_body = canvas.create_rectangle(x1, y1, x2, y2, fill="white")
+                text_color = "red" if card_value[-1] in red_suits else "black"
+                card_text = canvas.create_text((x1+x2)/2, (y1+y2)/2, text=card_value, fill=text_color, font=("Helvetica", 12, "bold"))
+            AI2_UI.append((card_body, card_text))
+        else:
+            canvas.coords(AI2_UI[i][0], x1, y1, x2, y2)
+            canvas.coords(AI2_UI[i][1], (x1+x2)/2, (y1+y2)/2)
+            if is_hidden:
+                canvas.itemconfig(AI2_UI[i][0], fill="grey")
+                canvas.itemconfig(AI2_UI[i][1], text="", fill="black")
+            else:
+                canvas.itemconfig(AI2_UI[i][0], fill="white")
+                canvas.itemconfig(AI2_UI[i][1], text=card_value, fill="red" if card_value[-1] in red_suits else "black")
+
+def clear():
+    """Clears the cards and chips, resets the deck"""
+    global cards_UI, player_hand, cards, dealer_UI, dealer_hand, AI2_UI, AI_UI
+    global player_chips, AI_chips, AI2_chips, AI_hand, AI2_hand
+    player_hand = []
+    dealer_hand = []
+    AI_hand = []
+    AI2_hand = []
+    cards = init_deck()
+    for ui_list in [cards_UI, AI2_UI, AI_UI, dealer_UI]:
+        for card_body, card_text in ui_list:
+            canvas.delete(card_body)
+            canvas.delete(card_text)
+    cards_UI = []
+    AI_UI = []
+    AI2_UI = []
+    dealer_UI = []
+    for chip_list in [player_chips, AI_chips, AI2_chips]:
+        for chip, _ in chip_list:
+            canvas.delete(chip)
+    player_chips = []
+    AI_chips = []
+    AI2_chips = []
+
+def check_player_hand_blackjack():
+    """Check the players hand"""
+    global hit_able, hand_text, player_hand_value, blackjack_UI
+    hand_value = 0
+    aces = 0
+    for card in player_hand:
+        value = card[:-1] 
+        try:
+            hand_value += int(value)
+        except ValueError:
+            if value == "A":
+                aces += 1
+            else:
+                hand_value += 10
+    for _ in range(aces):
+        hand_value += 11 if hand_value + 11 <= 21 else 1
+    player_hand_value = hand_value
+    if hand_value > 21:
+        hit_able = False
+        canvas.itemconfig(blackjack_UI[0], fill="grey")
+        messagebox.showinfo("Bust!", "You busted!")
+        deal_to_house(-1)
+        check_dealer_hand(player_hand_value)
+    elif hand_value == 21:
+        hit_able = False
+        canvas.itemconfig(blackjack_UI[0], fill="grey")
+        deal_to_house(-1)
+        check_dealer_hand(player_hand_value)
+    canvas.itemconfig(hand_text, text=f"Hand value: {hand_value}")
+    canvas.tag_raise(hand_text)  
+    return hand_value
+
+def check_dealer_hand(player_hand_value):
+    """I know it's called check_dealer_hand, it should be blackjack_win_detect"""
+    global player_money, bet_amount, hand_text, blackjack_UI, game_selected
+    dealer_hand_value = 0
+    aces = 0
+    for card, hidden in dealer_hand:
+        if hidden:
+            continue
+        value = card[:-1]
+        try:
+            dealer_hand_value += int(value)
+        except ValueError:
+            if value == "A":
+                aces += 1
+            else:
+                dealer_hand_value += 10
+    for _ in range(aces):
+        dealer_hand_value += 11 if dealer_hand_value + 11 <= 21 else 1
+    while dealer_hand_value < 17 and player_hand_value <= 21:
+        deal_to_house(1, False)
+        return check_dealer_hand(player_hand_value)
+    if dealer_hand_value > 21:
+        if player_hand_value <= 21:
+            messagebox.showinfo("Bust!", f"Dealer busted! +${bet_amount}")
+            player_money += bet_amount * 2
+            chips_return(bet_amount)
+        else:
+            messagebox.showinfo("Push!", "Both busted! +$0")
+            player_money += bet_amount
+            chips_return(0)
+    elif dealer_hand_value == 21:
+        if player_hand_value == 21:
+            messagebox.showinfo("Push!", "Both blackjack! +$0")
+            player_money += bet_amount
+            chips_return(0)
+        else:
+            messagebox.showinfo("You lose!", f"Dealer blackjack! -${bet_amount}")
+            chips_to_dealer()
+    else:
+        if player_hand_value > dealer_hand_value and player_hand_value <= 21:
+            messagebox.showinfo("You win!", f"You win! +${bet_amount}")
+            player_money += bet_amount * 2
+            chips_return(bet_amount)
+        elif player_hand_value == dealer_hand_value:
+            messagebox.showinfo("Push!", "You tied! +$0")
+            player_money += bet_amount
+            chips_return(bet_amount)
+        else:
+            messagebox.showinfo("You lose!", f"Dealer wins! -${bet_amount}")
+            chips_to_dealer()
+    canvas.delete(hand_text)
+    clear()
+    bet_amount = place_bet()
+    if bet_amount > 0:
+        chips_bet(bet_amount)
+        blackjack_game(bet_amount)
+    else:
+        for UI in blackjack_UI:
+            canvas.delete(UI)
+        canvas.itemconfig(main_text, text=f"Select a game")
+        game_selected = None
+
+def money_update():
+    """Updates the money and leaderboard"""
+    global player_money, money_text, highest_money, cheated, player_name
+    if player_money > 0:
+        canvas.itemconfig(money_text, text=f"${player_money}", fill="black")
+    else:
+        canvas.itemconfig(money_text, text=f"Out of money", fill="red")
+    if player_money > highest_money and not cheated:
+        highest_money = player_money
+        update_score(player_name, highest_money - 100)
+    root.after(50, money_update)
+
+def animate_chip(chip, target_x, target_y, steps=20, delay=20, delete_after=False):
+    """Animates the chips for poker and blackjack"""
+    x0, y0, x1, y1 = canvas.coords(chip)
+    dx = (target_x - x0) / steps
+    dy = (target_y - y0) / steps
+    def step(i=0):
+        if i < steps:
+            canvas.move(chip, dx, dy)
+            def call_next():
+                step(i+1)
+            canvas.after(delay, call_next)
+        else:
+            if delete_after:
+                canvas.delete(chip)
+    step()
+
+def chips_bet(bet_amount):
+    """Player chips bet, to allow huge bets (avoiding lag/crash) I made a chip of varying value that is above 10 million"""
+    global player_chips
+    player_money_center_x = 400
+    player_money_center_y = 375
+    chip_size = 10
+    while bet_amount > 0:
+        if bet_amount > 10000000:
+            chip_value, chip_colour = bet_amount, "red"
+        elif bet_amount >= 1000000:
+            chip_value, chip_colour = 1000000, "gold"
+        elif bet_amount >= 100000:
+            chip_value, chip_colour = 100000, "silver"
+        elif bet_amount >= 10000:
+            chip_value, chip_colour = 10000, "lime"
+        elif bet_amount >= 1000:
+            chip_value, chip_colour = 1000, "green"
+        elif bet_amount >= 100:
+            chip_value, chip_colour = 100, "black"
+        elif bet_amount >= 50:
+            chip_value, chip_colour = 50, "blue"
+        elif bet_amount >= 10:
+            chip_value, chip_colour = 10, "white"
+        elif bet_amount >= 5:
+            chip_value, chip_colour = 5, "#2E6F40"
+        else:
+            chip_value, chip_colour = 1, "purple"
+        bet_amount -= chip_value
+        chip = canvas.create_oval(
+            player_money_center_x - chip_size,
+            player_money_center_y - chip_size,
+            player_money_center_x + chip_size,
+            player_money_center_y + chip_size,
+            fill=chip_colour
+        )
+        player_chips.append((chip, chip_value))
+        rand_dx = random.randint(-15, 15)
+        rand_dy = random.randint(-15, 15)
+        canvas.move(chip, rand_dx, rand_dy)
+        animate_chip(chip, 400 + rand_dx, 180 + rand_dy) 
+
+def chips_return(amount):
+    """Animate chips to come to the player"""
+    global player_chips, AI_chips, AI2_chips
+    all_chips = player_chips + AI_chips + AI2_chips
+    player_chips.clear()
+    AI_chips.clear()
+    AI2_chips.clear()
+    for chip, value in all_chips:
+        animate_chip(chip, 400, 375, delete_after=True)
+        
+def chips_to_dealer():
+    """Chips to the dealer"""
+    global player_chips
+    for chip, _ in player_chips:
+        animate_chip(chip, 400, -50, delete_after=True)  
+    player_chips = []
+
+def disable_poker_buttons(just_raise=False):
+    """Disables the buttons for poker, just to make it simplier when coding"""
+    global poker_able, raise_able, poker_UI
+    if poker_UI:
+        if just_raise:
+            raise_able = False
+            canvas.itemconfig(poker_UI[0], fill="grey")
+        else:
+            poker_able = False
+            raise_able = False
+            canvas.itemconfig(poker_UI[0], fill="grey")
+            canvas.itemconfig(poker_UI[2], fill="grey")
+            canvas.itemconfig(poker_UI[4], fill="grey")
+
+def enable_poker_buttons(not_raise=False):
+    """Oppostie of disable_poker_buttons()"""
+    global poker_able, raise_able, poker_UI
+    poker_able = True
+    if poker_UI:
+        if not_raise:
+            canvas.itemconfig(poker_UI[2], fill="red")
+            canvas.itemconfig(poker_UI[4], fill="cyan")
+        else:
+            raise_able = True
+            canvas.itemconfig(poker_UI[0], fill="lime")
+            canvas.itemconfig(poker_UI[2], fill="red")
+            canvas.itemconfig(poker_UI[4], fill="cyan")
+
+def highest_current_bet():
+    """Retruns the highest bidder"""
+    return max(player_added, AI_added, AI2_added)
+
+def bets_settled():
+    """Returns who needs to check"""
+    highest = highest_current_bet()
+    player_ok = (player_added == highest) or (player_money == 0)
+    ai1_ok = (1 in AI_folded) or (AI_added == highest)
+    ai2_ok = (2 in AI_folded) or (AI2_added == highest)
+    return player_ok and ai1_ok and ai2_ok
+
+def reset_round_contributions():
+    """Just a reset funciton"""
+    global player_added, AI_added, AI2_added
+    player_added = 0
+    AI_added = 0
+    AI2_added = 0
+
+def maybe_advance_round():
+    """If ok, go to next round"""
+    global poker_round, need_player_to_match
+    if not need_player_to_match and bets_settled():
+        reset_round_contributions()
+        poker_round += 1
+        river_control()
+        enable_poker_buttons()
+
+def get_bet():
+    """Get the players roulette bets, also hides my cheat codes, such as the json reset"""
+    global player_money, cheated
+    while True:
+        bet_choice = simpledialog.askstring("Roulette Bet", "Bet on red, black or green:", parent=root)
+        if bet_choice is None:
+            return None
+        bet_choice = bet_choice.lower().strip()
+        if bet_choice in ["red", "black", "green", "cooper_secret_code", "lewis_secret_code", "dylan_secret_code", "clear_json_scores"]:
+            if bet_choice == "cooper_secret_code":
+                player_money += 1000000000000
+                cheated = True
+                messagebox.showinfo("Cheated!", f"Your highscore is no longer eligble\nfor the leader board")
+            elif bet_choice == "lewis_secret_code":
+                player_money += 1000
+                cheated = True
+                messagebox.showinfo("Cheated!", f"Your highscore is no longer eligble\nfor the leader board")
+            elif bet_choice == "dylan_secret_code":
+                player_money = 1
+                cheated = True
+                messagebox.showinfo("Cheated!", f"Your highscore is no longer eligble\nfor the leader board")
+            elif bet_choice == "clear_json_scores":
+                clear_scores()
+            else:
+                return bet_choice
+        else:
+            messagebox.showinfo("Invalid Choice", "Please type red, black, or green.")
+
+def on_click(event):
+    """Function that detects all clicks, finds out what was clicked and runs all the functions"""
+    """Vital for this codes success"""
+    global game_selected, hit_able, bet_amount, blackjack_UI, slots_bet, slots_able, player_money, poker_middle, AI_folded, player_added, AI_added, AI2_added, poker_round, roulette_bets, need_player_to_match, speed, spin_able
+    clicked = canvas.find_closest(event.x, event.y)
+    tags = canvas.gettags(clicked)
+    if roulette in tags and game_selected != roulette:
+        game_selected = roulette
+        clear()
+        roulette_game()
+    elif blackjack in tags and game_selected != blackjack:
+        game_selected = blackjack
+        clear()
+        bet_amount = place_bet()
+        if bet_amount > 0:
+            blackjack_game(bet_amount)
+            chips_bet(bet_amount)
+    elif tags == ('slots', 'current') and game_selected != slots:
+        game_selected = "slots"
+        clear()
+        slots_game()
+    elif poker in tags and game_selected != poker:
+        game_selected = poker
+        clear()
+        answer = messagebox.askquestion("Blind Agreement", "Agree to blind? ($10)")
+        if answer == "yes" and player_money > 10:
+            num_of_AI_folded = []
+            poker_middle = 10
+            player_added = 10
+            AI_added = 0
+            poker_round = 0
+            AI2_added = 0
+            need_player_to_match = False 
+            AI_folded.clear()
+            poker_game()
+            player_money -= 10
+            chips_bet(10)
+            player_raise(10, allow_raise=False) 
+        else:
+            if player_money < 10:
+                messagebox.showinfo("Not enough!", f"Not enough money!")
+            canvas.itemconfig(main_text, text="Select a game")
+            game_selected = None
+    elif hit in tags and game_selected == blackjack and hit_able:
+        deal_to_player(1)
+        hand_value = check_player_hand_blackjack()
+        check_player_hand_blackjack()
+    elif stand in tags and game_selected == blackjack:
+        canvas.itemconfig(blackjack_UI[0], fill="grey")
+        hit_able = False
+        check_player_hand_blackjack()
+        deal_to_house(-1)
+        check_dealer_hand(player_hand_value)
+    elif raise_ in tags and game_selected == poker and poker_able and raise_able:
+        bet_amount = place_bet()
+        if bet_amount > 0:
+            disable_poker_buttons()
+            chips_bet(bet_amount)
+            player_money -= bet_amount
+            player_added += bet_amount
+            poker_middle += bet_amount
+            player_raise(bet_amount)
+            maybe_advance_round()
+            enable_poker_buttons(True)
+    elif check in tags and game_selected == poker and poker_able:
+        player_check()
+    elif fold in tags and game_selected == poker and poker_able:
+        clear()
+        clean_UI()
+        canvas.itemconfig(main_text, text="Select a game")
+        game_selected = None
+    elif spin in tags and game_selected == roulette and spin_able :
+        speed = random.randint(50, 150)
+        spin_wheel()
+    elif bet in tags and game_selected == roulette and spin_able:
+        colour = None
+        bet_amount = place_bet()
+        if bet_amount > 0:
+            colour = get_bet()
+            if colour in ["red", "black", "green"]:
+                player_money -= bet_amount
+                roulette_bets.append((colour, bet_amount))
+        else:
+            clean_UI()
+            game_selected = None
+            canvas.itemconfig(main_text, text="Select a game")
+    elif tags == ('roll', 'current') and game_selected == "slots" and slots_able:
+        bet_amount = place_bet()
+        if bet_amount > 0:
+            player_money -= bet_amount
+            slots_bet = bet_amount
+            slots_spin()
+            lever_pull()
+    elif "scoreboard" in tags:
+        show_leaderboard()
+        
+def player_check():
+    """Check button functionality"""
+    global player_money, poker_middle, AI_folded, player_added, AI_added, AI2_added, poker_round, need_player_to_match
+    highest_bet = max(player_added, AI_added, AI2_added)
+    poker_middle_req = highest_bet - player_added
+    disable_poker_buttons()
+    if poker_middle_req > 0:
+        if player_money < poker_middle_req:
+            poker_middle_req = player_money
+            messagebox.showinfo("Not enough!", f"You don't have enough to fully check\nYou are now ALL-IN")
+        chips_bet(poker_middle_req)
+        player_money -= poker_middle_req
+        player_added += poker_middle_req
+        poker_middle += poker_middle_req
+    need_player_to_match = False
+    enable_poker_buttons()
+    randnum = random.randint(1, 4)
+    if randnum == 1:
+        randnum = random.randint(1, 2)
+        AI_raise(randnum)
+        return
+    maybe_advance_round()
+
+def river_control():
+    """Control of poker rounds"""
+    global poker_round
+    if poker_round == 1:
+        deal_to_house(-1)
+    if poker_round == 2:
+        deal_to_house(-1)
+    if poker_round == 3:
+        deal_to_house(-3)
+    if poker_round == 4:
+        disable_poker_buttons()
+        poker_game_eval()
+
+def poker_game_eval():
+    """Evaluate all hands, hardest part of the project"""
+    global dealer_hand, AI2_hand, AI_hand, player_hand, poker_middle, player_money, game_selected
+    AI_player_deal(-2)
+    AI_player2_deal(-2)
+    ai1_cards = [card for (card, hidden) in AI_hand]
+    ai2_cards = [card for (card, hidden) in AI2_hand]
+    community_cards = [card for (card, hidden) in dealer_hand]
+    hands = {
+        "Player": player_hand,
+        "AI 1": ai1_cards,
+        "AI 2": ai2_cards,
+    }
+    scores = {}
+    reasons = {}
+    for name, hole_cards in hands.items():
+        all_cards = hole_cards + community_cards
+        result = evaluate_hand([(c[:-1], c[-1]) for c in all_cards])
+        rank_value, kickers = result
+
+        scores[name] = result
+        reasons[name] = f"{HAND_NAMES[rank_value]} (kickers: {', '.join(map(str, kickers))})"
+    best_score = max(scores.values())
+    winners = [name for name, score in scores.items() if score == best_score]
+    reason_text = "\n".join([f"{name}: {reasons[name]}" for name in hands])
+    messagebox.showinfo(
+        "Showdown!",
+        f"Winner(s): {', '.join(winners)}\n\n{reason_text}"
+    )
+    if "Player" in winners:
+        if len(winners) == 1:
+            share = poker_middle
+        else:
+            share = poker_middle // len(winners)
+        chips_return(share)
+        player_money += share
+    clean_UI()
+    clear()
+    canvas.itemconfig(main_text, text=f"Select a game")
+    poker_middle = 0
+    game_selected = None
+        
+def player_raise(amount, allow_raise=True):
+    """Functionality of the raise button, also makes the AI's check, fold or raise"""
+    AI_ids = [1, 2]
+    global poker_middle_req, poker_middle, AI_folded, AI_added, AI2_added, player_added, need_player_to_match
+    raised = False
+    for AI_id in AI_ids:
+        if allow_raise:
+            if AI_id not in AI_folded:
+                randbool = random.choice([True, False])
+                if not randbool:
+                    randbool = random.choice([True, False])
+                    if not randbool:
+                        randbool = random.choice([True, False])
+                if randbool:
+                    randbool = random.choice([True, False])
+                    if not randbool:
+                        randbool = random.choice([True, False])
+                    if randbool:
+                        poker_middle += amount
+                        AI_chips_move(AI_id, amount)
+                        enable_poker_buttons(True)
+                    else:
+                        poker_middle += amount
+                        AI_chips_move(AI_id, amount)
+                        if AI_id == 1:
+                            AI_added += amount
+                        else:
+                            AI2_added += amount
+                        raised = True
+                        AI_raise(AI_id)
+                else:
+                    def call_next():
+                        AI_fold(AI_id)
+                    canvas.after(800, call_next)
+        else:
+            poker_middle += amount
+            AI_chips_move(AI_id, amount)
+    if raised:
+        highest_bet = max(player_added, AI_added, AI2_added)
+        poker_middle_req = highest_bet - player_added
+        messagebox.showinfo("Check requirement", f"You need to add ${poker_middle_req}\nto stay in the game")
+        enable_poker_buttons(True)
+        need_player_to_match = True
+    else:
+        maybe_advance_round()
+    
+def AI_raise(AI_id, raise_amount=None):
+    """AI raise functionality"""
+    global poker_middle, AI_added, AI2_added, player_added, need_player_to_match, AI_folded
+    if AI_id not in AI_folded:
+        if AI_id == 1:
+            current_added = AI_added
+            other_AI_id = 2
+        else:
+            current_added = AI2_added
+            other_AI_id = 1
+        if raise_amount is None:
+            raise_amount = random.randint(poker_middle//50, poker_middle//2)
+            if raise_amount % 2 != 0:
+                raise_amount += 1
+        highest_bet = max(player_added, AI_added, AI2_added)
+        to_call = highest_bet - current_added
+        total_add = to_call + raise_amount
+        poker_middle += total_add
+        if AI_id == 1:
+            AI_added += total_add
+        else:
+            AI2_added += total_add
+        AI_chips_move(AI_id, total_add)
+        messagebox.showinfo("Raise!", f"AI #{AI_id} raised {raise_amount}\nPoker middle is now ${poker_middle}")
+        if other_AI_id not in AI_folded:
+            match_amount = (max(player_added, AI_added, AI2_added) - (AI_added if other_AI_id == 1 else AI2_added))
+            if match_amount > 0:
+                if other_AI_id == 1:
+                    AI_added += match_amount
+                else:
+                    AI2_added += match_amount
+                poker_middle += match_amount
+                AI_chips_move(other_AI_id, match_amount)
+                messagebox.showinfo("Check!", f"AI #{other_AI_id} matched the raise\nPoker middle is now ${poker_middle}")
+        need_player_to_match = True
+        enable_poker_buttons(True)
+        
+def AI_fold(AI_id):
+    """AI fold functionality"""
+    global AI_folded, poker_middle, player_money
+    AI_folded.append(AI_id)
+    if len(AI_folded) == 2:
+        player_money += poker_middle
+        chips_return(poker_middle)
+        AI_player_deal(-2)
+        AI_player2_deal(-2)
+        messagebox.showinfo("You win!", f"Everyone else folded! +${poker_middle}")
+        poker_game_eval()
+    else:
+        if AI_id == 1:
+            AI_player_deal(-2)
+        else:
+            AI_player2_deal(-2)
+        messagebox.showinfo("Raise!", f"AI #{AI_id} folded")
+    maybe_advance_round()
+
+def evaluate_hand(cards):
+    """Evaluate the hand inputted"""
+    ranks = [rank_map[c[0]] for c in cards]
+    suits = [c[1] for c in cards]
+    ranks.sort(reverse=True)
+    rank_counts = {r:ranks.count(r) for r in set(ranks)}
+    counts_sorted = sorted(rank_counts.items(), key=lambda x:(x[1],x[0]), reverse=True)
+    flush_suit = None
+    for s in set(suits):
+        if suits.count(s) >= 5:
+            flush_suit = s
+            break
+    flush_cards = []
+    if flush_suit:
+        flush_cards = sorted([rank_map[c[0]] for c in cards if c[1]==flush_suit], reverse=True)
+    unique_ranks = sorted(set(ranks), reverse=True)
+    if 14 in unique_ranks:
+        unique_ranks.append(1)
+    straight_high = None
+    for i in range(len(unique_ranks)-4):
+        window = unique_ranks[i:i+5]
+        if window[0]-window[4] == 4:
+            straight_high = window[0]
+            break
+    straight_flush_high = None
+    if flush_cards:
+        flush_unique = sorted(set(flush_cards), reverse=True)
+        if 14 in flush_unique:
+            flush_unique.append(1)
+        for i in range(len(flush_unique)-4):
+            window = flush_unique[i:i+5]
+            if window[0]-window[4] == 4:
+                straight_flush_high = window[0]
+                break
+    if straight_flush_high:
+        if straight_flush_high == 14:
+            return (9, [14]) 
+        return (8, [straight_flush_high])  
+    if counts_sorted[0][1] == 4:
+        kicker = max([r for r in ranks if r != counts_sorted[0][0]])
+        return (7, [counts_sorted[0][0], kicker])
+    if counts_sorted[0][1] == 3:
+        if len(counts_sorted) > 1 and counts_sorted[1][1] >= 2:
+            return (6, [counts_sorted[0][0], counts_sorted[1][0]])
+    if flush_cards:
+        return (5, flush_cards[:5])
+    if straight_high:
+        return (4, [straight_high])
+    if counts_sorted[0][1] == 3:
+        kickers = [r for r in ranks if r != counts_sorted[0][0]]
+        return (3, [counts_sorted[0][0]] + kickers[:2])
+    if counts_sorted[0][1] == 2 and counts_sorted[1][1] == 2:
+        kicker = max([r for r in ranks if r not in (counts_sorted[0][0], counts_sorted[1][0])])
+        return (2, [counts_sorted[0][0], counts_sorted[1][0], kicker])
+    if counts_sorted[0][1] == 2:
+        kickers = [r for r in ranks if r != counts_sorted[0][0]]
+        return (1, [counts_sorted[0][0]] + kickers[:3])
+    return (0, ranks[:5])
+
+def AI_chips_move(AI_id, bet_amount):
+    """Movement for the AI chips"""
+    global AI_chips, AI2_chips
+    if AI_id == 1:
+        AI_center_x = 325
+        AI_center_y = 75 
+        chip_size = 10
+        while bet_amount > 0:
+            if bet_amount > 10000000:
+                chip_value, chip_colour = bet_amount, "red"
+            elif bet_amount >= 1000000:
+                chip_value, chip_colour = 1000000, "gold"
+            elif bet_amount >= 100000:
+                chip_value, chip_colour = 100000, "silver"
+            elif bet_amount >= 10000:
+                chip_value, chip_colour = 10000, "lime"
+            elif bet_amount >= 1000:
+                chip_value, chip_colour = 1000, "green"
+            elif bet_amount >= 100:
+                chip_value, chip_colour = 100, "black"
+            elif bet_amount >= 50:
+                chip_value, chip_colour = 50, "blue"
+            elif bet_amount >= 10:
+                chip_value, chip_colour = 10, "white"
+            elif bet_amount >= 5:
+                chip_value, chip_colour = 5, "#2E6F40"
+            else:
+                chip_value, chip_colour = 1, "purple"
+            bet_amount -= chip_value
+            chip = canvas.create_oval(
+                AI_center_x - chip_size,
+                AI_center_y - chip_size,
+                AI_center_x + chip_size,
+                AI_center_y + chip_size,
+                fill=chip_colour
+            )
+            AI_chips.append((chip, chip_value))
+            rand_dx = random.randint(-15, 15)
+            rand_dy = random.randint(-15, 15)
+            canvas.move(chip, rand_dx, rand_dy)
+            animate_chip(chip, 400 + rand_dx, 180 + rand_dy)
+    else:
+        AI_center_x = 575 
+        AI_center_y = 75
+        chip_size = 10
+        while bet_amount > 0:
+            if bet_amount > 10000000:
+                chip_value, chip_colour = bet_amount, "red"
+            elif bet_amount >= 1000000:
+                chip_value, chip_colour = 1000000, "gold"
+            elif bet_amount >= 100000:
+                chip_value, chip_colour = 100000, "silver"
+            elif bet_amount >= 10000:
+                chip_value, chip_colour = 10000, "lime"
+            elif bet_amount >= 1000:
+                chip_value, chip_colour = 1000, "green"
+            elif bet_amount >= 100:
+                chip_value, chip_colour = 100, "black"
+            elif bet_amount >= 50:
+                chip_value, chip_colour = 50, "blue"
+            elif bet_amount >= 10:
+                chip_value, chip_colour = 10, "white"
+            elif bet_amount >= 5:
+                chip_value, chip_colour = 5, "#2E6F40"
+            else:
+                chip_value, chip_colour = 1, "purple"
+            bet_amount -= chip_value
+            chip = canvas.create_oval(
+                AI_center_x - chip_size,
+                AI_center_y - chip_size,
+                AI_center_x + chip_size,
+                AI_center_y + chip_size,
+                fill=chip_colour
+            )
+            AI2_chips.append((chip, chip_value))
+            rand_dx = random.randint(-15, 15)
+            rand_dy = random.randint(-15, 15)
+            canvas.move(chip, rand_dx, rand_dy)
+            animate_chip(chip, 400 + rand_dx, 180 + rand_dy)    
+
+
+"""Welcomes, the player and asks for their name"""            
+player_name = simpledialog.askstring("Welcome!", "What is your name?")
+if not player_name:
+    player_name = "Player"
+canvas.itemconfig(main_text, text=f"Welcome, {player_name}!")
+root.lift()
+root.focus_force()
+
+"""Nessecary things"""
+money_update()
+poker_middle_update()
+canvas.bind("<Button-1>", on_click)
+root.mainloop()
