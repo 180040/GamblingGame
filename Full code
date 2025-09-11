@@ -958,6 +958,7 @@ def on_click(event):
         roulette_game()
     elif blackjack in tags and game_selected != blackjack:
         game_selected = blackjack
+        spin_able = True
         clear()
         bet_amount = place_bet()
         if bet_amount > 0:
@@ -965,11 +966,13 @@ def on_click(event):
             chips_bet(bet_amount)
     elif tags == ('slots', 'current') and game_selected != slots:
         game_selected = "slots"
+        spin_able = True
         clear()
         slots_game()
     elif poker in tags and game_selected != poker:
         game_selected = poker
         clear()
+        spin_able = True
         answer = messagebox.askquestion("Blind Agreement", "Agree to blind? ($10)")
         if answer == "yes" and player_money > 10:
             num_of_AI_folded = []
