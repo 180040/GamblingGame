@@ -425,7 +425,8 @@ def slots_spin():
             def step(i=0):
                 if i < steps:
                     for slot_num in slots_nums:
-                        randnum = random.randint(0, 7)
+                        emojis = ["\U0001F9BB", "\U0001F474", "\U0001F9BF", "\U0001F4B0", "\U0001F4A9", "\U0001F47A", "\U0001FAF0"]
+                        randnum = random.choice(emojis)
                         canvas.itemconfig(slot_num, text=randnum)
                     def call_next():
                         step(i+1)
@@ -441,7 +442,7 @@ def end_spin():
     """After the slot machine this runs, giving the player money"""
     global slots_able, slots_nums, player_money, slots_bet
     slots_able = True
-    slot_nums = [int(canvas.itemcget(slot, "text")) for slot in slots_nums]
+    slot_nums = [str(canvas.itemcget(slot, "text")) for slot in slots_nums]
     counts = Counter(slot_nums)
     freq = sorted(counts.values(), reverse=True)
     if slots_nums:
