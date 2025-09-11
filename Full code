@@ -444,21 +444,22 @@ def end_spin():
     slot_nums = [int(canvas.itemcget(slot, "text")) for slot in slots_nums]
     counts = Counter(slot_nums)
     freq = sorted(counts.values(), reverse=True)
-    if freq[0] == 4:
-        player_money += slots_bet * 100
-        messagebox.showinfo("Quad!", f"Quadruple! +${slots_bet * 100}")
-    elif freq[0] == 3:
-        player_money = player_money + slots_bet * 50
-        messagebox.showinfo("Triple!", f"Triple! +${slots_bet * 50}")
-    elif freq[0] == 2:
-        if len(freq) == 2:
-            player_money = player_money + slots_bet * 10
-            messagebox.showinfo("2xPairs!", f"Two pairs! +${slots_bet * 10}")
+    if slots_nums:
+        if freq[0] == 4:
+            player_money += slots_bet * 100
+            messagebox.showinfo("Quad!", f"Quadruple! +${slots_bet * 100}")
+        elif freq[0] == 3:
+            player_money = player_money + slots_bet * 50
+            messagebox.showinfo("Triple!", f"Triple! +${slots_bet * 50}")
+        elif freq[0] == 2:
+            if len(freq) == 2:
+                player_money = player_money + slots_bet * 10
+                messagebox.showinfo("2xPairs!", f"Two pairs! +${slots_bet * 10}")
+            else:
+                player_money = player_money + slots_bet * 3
+                messagebox.showinfo("Pair!", f"Pair! +${slots_bet * 3}")
         else:
-            player_money = player_money + slots_bet * 3
-            messagebox.showinfo("Pair!", f"Pair! +${slots_bet * 3}")
-    else:
-        messagebox.showinfo("Nothing!", f"Nothing! -${slots_bet}")
+            messagebox.showinfo("Nothing!", f"Nothing! -${slots_bet}")
 
 def ball_spin(speed):
     """Spins the ball for roulette"""
