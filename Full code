@@ -1048,6 +1048,7 @@ def on_click(event):
     elif "scoreboard" in tags:
         show_leaderboard()
     elif "exit" in tags:
+        money_update()
         root.destroy()
         root.quit()
         
