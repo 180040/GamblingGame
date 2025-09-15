@@ -10,28 +10,38 @@ from collections import Counter
 """Tk stuff"""
 root = tk.Tk()
 root.title("Cooper's gambling game")
-canvas = tk.Canvas(root, width=700, height=400, bg="white")
+canvas = tk.Canvas(root, width=800, height=400, bg="white")
 canvas.pack()
 
 """More TK stuff, the visible stuff tho"""
 main_area = canvas.create_rectangle(100, 0, 700, 400, fill="white", tags="main")
 table = canvas.create_oval(130, -300, 670, 300, fill="green", outline="", tags="table")
 button_width = 100
-button_height = 66.666667
+button_height = 80
 text_font = ("Helvetica", 11, "bold")
-roulette_button = canvas.create_rectangle(0, 0, button_width, button_height,fill="green", tags="roulette", outline="")
+roulette_button = canvas.create_rectangle(0, 0, button_width, button_height,fill="black", tags="roulette", outline="")
 roulette_text = canvas.create_text(button_width/2, button_height/2,text="Roulette", fill="white", font=text_font, tags="roulette")
-blackjack_button = canvas.create_rectangle(0, button_height, button_width, button_height*2,fill="red", tags="blackjack", outline="")
+blackjack_button = canvas.create_rectangle(0, button_height, button_width, button_height*2,fill="#072475", tags="blackjack", outline="")
 blackjack_text = canvas.create_text(button_width/2, button_height*1.5,text="Blackjack", fill="white", font=text_font, tags="blackjack")
-slots_button = canvas.create_rectangle(0, button_height*2, button_width, button_height*3,fill="blue", tags="slots", outline="")
+slots_button = canvas.create_rectangle(0, button_height*2, button_width, button_height*3,fill="#13563B", tags="slots", outline="")
 slots_text = canvas.create_text(button_width/2, button_height*2.5,text="Slots", fill="white", font=text_font, tags="slots")
-poker_button = canvas.create_rectangle(0, button_height*3, button_width, button_height*4,fill="black", tags="poker", outline="")
+poker_button = canvas.create_rectangle(0, button_height*3, button_width, button_height*4,fill="#A46928", tags="poker", outline="")
 poker_text = canvas.create_text(button_width/2, button_height*3.5,text="Poker", fill="white", font=text_font, tags="poker")
-scoreboard_button = canvas.create_rectangle(0, button_height*4, button_width, button_height*5,fill="purple", tags="scoreboard", outline="")
+scoreboard_button = canvas.create_rectangle(0, button_height*4, button_width, button_height*5,fill="#E4A700", tags="scoreboard", outline="")
 scoreboard_text = canvas.create_text(button_width/2, button_height*4.5,text="Scoreboard", fill="white", font=text_font, tags="scoreboard")
-exit_button = canvas.create_rectangle(0, button_height*5, button_width, button_height*6,fill="brown", tags="exit", outline="")
-exit_text = canvas.create_text(button_width/2, button_height*5.5,text="Cash out", fill="white", font=text_font, tags="exit")
-table = canvas.create_oval(130, -300, 670, 300, fill="green", outline="", tags="table")
+# Right side button
+exit_button = canvas.create_rectangle(700, 0, button_width + 700, button_height,fill="black", tags="exit", outline="")
+exit_text = canvas.create_text(button_width/2 + 700, button_height/2,text="Cash out", fill="white", font=text_font, tags="exit")
+blackjack_button = canvas.create_rectangle(700, button_height, button_width + 700, button_height*2,fill="#072475", tags="blackjack", outline="")
+blackjack_text = canvas.create_text(button_width/2 + 700, button_height*1.5,text="Stocks", fill="white", font=text_font, tags="blackjack")
+slots_button = canvas.create_rectangle(700, button_height*2, button_width + 700, button_height*3,fill="#13563B", tags="slots", outline="")
+slots_text = canvas.create_text(button_width/2 + 700, button_height*2.5,text="Store", fill="white", font=text_font, tags="slots")
+poker_button = canvas.create_rectangle(700, button_height*3, button_width+ 700, button_height*4,fill="#A46928", tags="poker", outline="")
+poker_text = canvas.create_text(button_width/2+ 700, button_height*3.5,text="Assets", fill="white", font=text_font, tags="poker")
+scoreboard_button = canvas.create_rectangle(700, button_height*4, button_width+ 700, button_height*5,fill="#E4A700", tags="scoreboard", outline="")
+scoreboard_text = canvas.create_text(button_width/2+ 700, button_height*4.5,text="Employment", fill="white", font=text_font, tags="scoreboard")
+
+table = canvas.create_oval(130, -300, 670, 300, fill="#016D29", outline="", tags="table")
 main_text = canvas.create_text (400, 50, text="Select", fill="black", font=("Helvetica", 24, "bold"))
 money_text = canvas.create_text(400, 375, text=f"$0", fill="black", font=("Helvetica", 30, "bold"), tags="money_text")
 
@@ -152,7 +162,7 @@ def update_score(player, score):
             break
     if not found:
         scores.append({"name": player, "score": score})
-    scores = sorted(scores, key=lambda x: x["score"], reverse=True)[:10]
+    scores = sorted(scores, key=lambda x: x["score"], reverse=True)[:5]
     save_scores(scores)
 
 def show_leaderboard():
@@ -206,7 +216,10 @@ def place_bet():
         return False
     elif bet > player_money:
         awns_bool = messagebox.askquestion("All-IN?", "Are you sure you want to go all-in?")
-        return player_money
+        if awns_bool == "yes":
+            return player_money
+        else:
+            return False
     elif bet == 0:
         messagebox.showerror("Error", "Zero cannot be placed as a bet")
         return place_bet()
@@ -1048,9 +1061,12 @@ def on_click(event):
     elif "scoreboard" in tags:
         show_leaderboard()
     elif "exit" in tags:
-        money_update()
-        root.destroy()
-        root.quit()
+        awns_bool = messagebox.askquestion("Quit?", "Are you sure you want to quit?")
+        print(awns_bool)
+        if awns_bool == "yes":
+            money_update()
+            root.destroy()
+            root.quit()
         
 def player_check():
     """Check button functionality"""
