@@ -9,7 +9,7 @@ from collections import Counter
 
 """Tk stuff"""
 root = tk.Tk()
-root.title("Cooper's gambling game")
+root.title("Make money!")
 canvas = tk.Canvas(root, width=800, height=400, bg="white")
 canvas.pack()
 
@@ -30,21 +30,20 @@ poker_text = canvas.create_text(button_width/2, button_height*3.5,text="Poker", 
 scoreboard_button = canvas.create_rectangle(0, button_height*4, button_width, button_height*5,fill="#E4A700", tags="scoreboard", outline="")
 scoreboard_text = canvas.create_text(button_width/2, button_height*4.5,text="Scoreboard", fill="white", font=text_font, tags="scoreboard")
 # Right side button
-exit_button = canvas.create_rectangle(700, 0, button_width + 700, button_height,fill="black", tags="exit", outline="")
+exit_button = canvas.create_rectangle(700, 0, button_width + 700, button_height,fill="#E4A700", tags="exit", outline="")
 exit_text = canvas.create_text(button_width/2 + 700, button_height/2,text="Cash out", fill="white", font=text_font, tags="exit")
-blackjack_button = canvas.create_rectangle(700, button_height, button_width + 700, button_height*2,fill="#072475", tags="blackjack", outline="")
-blackjack_text = canvas.create_text(button_width/2 + 700, button_height*1.5,text="Stocks", fill="white", font=text_font, tags="blackjack")
-slots_button = canvas.create_rectangle(700, button_height*2, button_width + 700, button_height*3,fill="#13563B", tags="slots", outline="")
-slots_text = canvas.create_text(button_width/2 + 700, button_height*2.5,text="Store", fill="white", font=text_font, tags="slots")
-poker_button = canvas.create_rectangle(700, button_height*3, button_width+ 700, button_height*4,fill="#A46928", tags="poker", outline="")
-poker_text = canvas.create_text(button_width/2+ 700, button_height*3.5,text="Assets", fill="white", font=text_font, tags="poker")
-scoreboard_button = canvas.create_rectangle(700, button_height*4, button_width+ 700, button_height*5,fill="#E4A700", tags="scoreboard", outline="")
+blackjack_button = canvas.create_rectangle(700, button_height, button_width + 700, button_height*2,fill="#A46928", tags="stocks", outline="")
+blackjack_text = canvas.create_text(button_width/2 + 700, button_height*1.5,text="Stocks", fill="white", font=text_font, tags="stocks")
+slots_button = canvas.create_rectangle(700, button_height*2, button_width + 700, button_height*3,fill="#13563B", tags="store", outline="")
+slots_text = canvas.create_text(button_width/2 + 700, button_height*2.5,text="Store", fill="white", font=text_font, tags="store")
+poker_button = canvas.create_rectangle(700, button_height*3, button_width+ 700, button_height*4,fill="#072475", tags="assets", outline="")
+poker_text = canvas.create_text(button_width/2+ 700, button_height*3.5,text="Assets", fill="white", font=text_font, tags="assets")
+scoreboard_button = canvas.create_rectangle(700, button_height*4, button_width+ 700, button_height*5,fill="black", tags="scoreboard", outline="")
 scoreboard_text = canvas.create_text(button_width/2+ 700, button_height*4.5,text="Employment", fill="white", font=text_font, tags="scoreboard")
-
+#Main UI things
 table = canvas.create_oval(130, -300, 670, 300, fill="#016D29", outline="", tags="table")
 main_text = canvas.create_text (400, 50, text="Select", fill="black", font=("Helvetica", 24, "bold"))
 money_text = canvas.create_text(400, 375, text=f"$0", fill="black", font=("Helvetica", 30, "bold"), tags="money_text")
-
 
 """Variable"""
 roulette = "roulette"
@@ -60,6 +59,7 @@ spin = "spin"
 bet = "bet"
 roll = "roll"
 cards_UI = []
+player_stock_amount = 0
 player_hand = []
 game_selected = None
 hit_able = True
@@ -72,7 +72,6 @@ AI_added = 0
 AI2_added = 0
 player_added = 0
 player_folded = False
-cheated = False
 AI1_folded = False
 AI2_folded = False
 AI_folded = []
@@ -81,6 +80,7 @@ slots_nums = []
 dealer_hand = []
 AI_chips = []
 AI2_chips = []
+after_handle = None
 slot_machine = 0
 slots_bet = 0
 AI_hand = []
@@ -92,9 +92,11 @@ player_chips = []
 poker_UI = []
 roulette_UI = []
 slots_UI = []
+stocks_UI = []
 red_suits = ["♥", "♦"]
 poker_middle_text = None
 poker_round = 0
+assets_UI = []
 spin_able = True
 roulette_bets = []
 arcs = []
@@ -120,6 +122,25 @@ HAND_NAMES = {
     1: "One Pair",
     0: "High Card"
 }
+player_assets = [{"name": "Car", "value": 30000, "amount": 1},
+                 {"name": "Watch", "value": 35000, "amount": 0},
+                 {"name": "Diamond chain", "value": 50000, "amount": 0},
+                 {"name": "House", "value": 8000000, "amount": 1},
+                 {"name": "Supercar", "value": 60000000, "amount": 0},
+                 {"name": "Yacht", "value": 15000000, "amount": 0},
+                 {"name": "Private Jet", "value": 30000000, "amount": 0},
+                 {"name": "NBA team", "value": 5000000000, "amount": 0},
+                 {"name": "Lewis trophy", "value": 1000000000000000, "amount": 0}]
+
+def generate_stock():
+    price_increase = [-6, -5, -4, -3, -2, -1, 1, 2, 3, 4, 5, 6]
+    price = 10
+    list_ = []
+    for _ in range(30):
+        price += random.choice(price_increase)
+        list_.append(price)
+    return list_
+stock_prices = generate_stock()  
 
 def init_deck():
     return [
@@ -190,7 +211,7 @@ def poker_middle_update():
 
 def clean_UI():
     """Clears the UI"""
-    global blackjack_UI, poker_UI, slots_UI, roulette_UI, arcs, ball, slot_extra_UI, slots, slots_nums
+    global blackjack_UI, poker_UI, slots_UI, roulette_UI, arcs, ball, slot_extra_UI, slots, slots_nums, stocks_UI, assets_UI
     for ui_list in [blackjack_UI, poker_UI, slots_UI, roulette_UI]:
         for ui_item in ui_list:
             canvas.delete(ui_item)
@@ -204,6 +225,13 @@ def clean_UI():
         canvas.delete(slot)
     for slot in slots_nums:
         canvas.delete(slot)
+    for stock_UI in stocks_UI:
+        canvas.delete(stock_UI)
+    for asset_UI in assets_UI:
+        canvas.delete(asset_UI)
+    canvas.delete("stock_line")
+    stocks_UI = []
+    assets = []
     slots = []
     slots_nums = []
     slot_extra_UI = []
@@ -224,7 +252,43 @@ def place_bet():
         messagebox.showerror("Error", "Zero cannot be placed as a bet")
         return place_bet()
     else:
-        return bet
+        return bet 
+
+def place_bet_stock(stock_price):
+    """Places the bet for the stock functions"""
+    global player_money, game_selected, stock_prices
+    bet = simpledialog.askinteger("Place Bet", f"You have ${player_money}.\nThe price of a stock is ${stock_price}\nHow many stocks do you want:")
+    if bet is None:
+        return False, False
+    elif bet * stock_price > player_money:
+        awns_bool = messagebox.askquestion("Buy as much as possible?", f"The max amount you can buy is {player_money//stock_price}\nAre you sure you want to buy as much as possible?")
+        if awns_bool == "yes":
+            return player_money//stock_price, stock_price
+        else:
+            return False, False
+    elif bet == 0:
+        messagebox.showerror("Error", "Zero cannot be placed as a bet")
+        return place_bet_stock(stock_price)
+    else:
+        return bet, stock_price
+
+def sell_stocks(stock_price):
+    """Places the bet for the stock functions"""
+    global player_stock_amount, game_selected, stock_prices
+    bet = simpledialog.askinteger("How much to sell", f"The price of a stock is ${stock_price}\nYou have {player_stock_amount} stock(s)\nAll your stocks are worth ${player_stock_amount * stock_price}\nHow many stocks do you want to sell:")
+    if bet is None:
+        return False, False
+    elif bet > player_stock_amount:
+        awns_bool = messagebox.askquestion("Sell All?", "Are you sure you want to sell in?")
+        if awns_bool == "yes":
+            return player_stock_amount, stock_price
+        else:
+            return False, False
+    elif bet == 0:
+        messagebox.showerror("Error", "Zero cannot be placed as a bet")
+        return sell_stocks(stock_price)
+    else:
+        return bet, stock_price
 
 def roulette_game():
     """Setup for roulette"""
@@ -286,7 +350,132 @@ def slots_game():
     slots_UI.append(roll_button)
     slots_UI.append(roll_text)
     create_slots()
-    
+
+def stocks_game():
+    """Setup for stocks game"""
+    global stocks_UI, stock_price_text
+    clean_UI()
+    cover = canvas.create_rectangle(100, 0, 700, 500, fill="white")
+    stocks_UI.append(cover)
+    canvas.tag_raise(money_text)
+    canvas.itemconfig(main_text, text="Stocks")
+    buy_button = canvas.create_rectangle(600, 350, 700, 400, fill="lime", tags="buy")
+    buy_text = canvas.create_text(650, 375, text="Buy", fill="black", font=("Helvetica", 22, "bold"), tags="buy")
+    sell_button = canvas.create_rectangle(600, 300, 700, 350, fill="red", tags="sell")
+    sell_text = canvas.create_text(650, 325, text="Sell", fill="black", font=("Helvetica", 22, "bold"), tags="sell")
+    stocks_UI.append(buy_button)
+    stocks_UI.append(buy_text)
+    stocks_UI.append(sell_button)
+    stocks_UI.append(sell_text)
+    stock_name = canvas.create_text(400, 25, text="Stock market", font=("Helvetica", 26, "bold"))
+    stock_price_text = canvas.create_text(400, 55, text="Price: Loading..", font=("Helvetica", 20))
+    stocks_UI.append(stock_name)
+    stocks_UI.append(stock_price_text)
+    graph_box = canvas.create_rectangle(150, 85, 575, 325, outline="black", width=2)
+    stocks_UI.append(graph_box)
+
+def assets_menu():
+    """Setup for stocks game"""
+    global assets_UI, player_assets
+    clean_UI()
+    cover = canvas.create_rectangle(100, 0, 700, 500, fill="white")
+    assets_UI.append(cover)
+    canvas.tag_raise(money_text)
+    canvas.tag_raise(main_text)
+    canvas.itemconfig(main_text, text="Assets")
+    box = canvas.create_rectangle(121.5, 90, 679, 330, fill="white", outline="black", width=2)
+    assets_UI.append(box)
+    start_y = 100
+    for asset in player_assets:
+        text = canvas.create_text(140, start_y, anchor="nw", text=f"{asset['name']} x {asset['amount']}", fill="black", font=("Helvetica", 15, "bold"))
+        text1 = canvas.create_text(350, start_y, anchor="nw", text=f"${asset['value']}", fill="black", font=("Helvetica", 15, "bold"))
+        if asset["amount"] > 0:
+            colour = "blue"
+        else:
+            colour = "red"
+        sell_button = canvas.create_rectangle(630, start_y+2, 670, start_y+23, fill=colour, tags=("asset_sell", f"{asset['name']}"))
+        sell_text = canvas.create_text(633, start_y+1.5, anchor="nw", text="Sell", fill="white", font=("Helvetica", 15, "bold"), tags=("asset_sell", f"{asset['name']}"))
+        if asset["name"] != "Lewis trophy":
+            line = canvas.create_line(125, start_y + 25, 680, start_y + 25, fill="grey", width=1)
+        assets_UI.append(text)
+        assets_UI.append(text1)
+        assets_UI.append(sell_button)
+        assets_UI.append(sell_text)
+        assets_UI.append(line)
+        start_y += 25
+
+def store_menu():
+    """Setup for stocks game"""
+    global assets_UI, player_assets, player_money
+    clean_UI()
+    cover = canvas.create_rectangle(100, 0, 700, 500, fill="white")
+    assets_UI.append(cover)
+    canvas.tag_raise(money_text)
+    canvas.tag_raise(main_text)
+    canvas.itemconfig(main_text, text="Store")
+    box = canvas.create_rectangle(121.5, 90, 679, 330, fill="white", outline="black", width=2)
+    assets_UI.append(box)
+    start_y = 100
+    for asset in player_assets:
+        text = canvas.create_text(140, start_y, anchor="nw", text=f"{asset['name']} x {asset['amount']}", fill="black", font=("Helvetica", 15, "bold"))
+        text1 = canvas.create_text(350, start_y, anchor="nw", text=f"${asset['value']}", fill="black", font=("Helvetica", 15, "bold"))
+        if asset["value"] <= player_money:
+            colour = "green"
+        else:
+            colour = "red"
+        buy_button = canvas.create_rectangle(630, start_y+2, 670, start_y+23, fill=colour, tags=("asset_buy", f"{asset['name']}"))
+        buy_text = canvas.create_text(633, start_y+1.5, anchor="nw", text="Buy", fill="white", font=("Helvetica", 15, "bold"), tags=("asset_buy", f"{asset['name']}"))
+        if asset["name"] != "Lewis trophy":
+            line = canvas.create_line(125, start_y + 25, 680, start_y + 25, fill="grey", width=1)
+        assets_UI.append(text)
+        assets_UI.append(text1)
+        assets_UI.append(buy_button)
+        assets_UI.append(buy_text)
+        assets_UI.append(line)
+        start_y += 25
+
+def update_stock_graph(colour):
+    """Draw the stock price line"""
+    global stock_prices, stock_price_text, game_selected
+    canvas.delete("stock_line")
+    if game_selected == "stocks":
+        if not stock_prices:
+            return
+        graph_left, graph_top, graph_right, graph_bottom = 150, 95, 570, 315
+        graph_width = graph_right - graph_left
+        graph_height = graph_bottom - graph_top
+        max_price = max(stock_prices)
+        min_price = min(stock_prices)
+        price_range = max_price - min_price if max_price != min_price else 1
+        coords = []
+        for i, price in enumerate(stock_prices):
+            x = graph_left + (i / max(1, len(stock_prices)-1)) * graph_width
+            y = graph_bottom - ((price - min_price) / price_range) * graph_height
+            coords.append((x, y))
+        for i in range(len(coords)-1):
+            x1, y1 = coords[i]
+            x2, y2 = coords[i+1]
+            canvas.create_line(x1, y1, x2, y2, fill=colour, width=5, tags="stock_line")
+        
+def simulate_stock_price():
+    """Update stock price and call the redraw graph function"""
+    global stock_prices, stock_price_text, after_handle, game_selected
+    price_increase = [-6, -5, -4, -3, -2, -1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    random_increase = random.choice(price_increase)
+    new_price = stock_prices[-1] + random_increase
+    if new_price <= 0:
+        new_price = 1
+    stock_prices.append(new_price)
+    if len(stock_prices) > 30:
+        stock_prices.pop(0)
+    if game_selected == "stocks":
+        canvas.itemconfig(stock_price_text, text=f"Price: ${new_price}")
+    if random_increase > 0:
+        update_stock_graph("green")
+    else:
+        update_stock_graph("red")
+    canvas.after(2600, simulate_stock_price)
+
 def poker_game():
     """Setup for poker"""
     global poker_UI
@@ -322,7 +511,6 @@ def create_slots():
     slots.append(slot2)
     slots.append(slot3)
     slots.append(slot4)
-    
 
 def deal_to_house(num_new_cards, hidden=False):
     """Deals card to the dealer, allows to be hidden"""
@@ -412,7 +600,6 @@ def spin_wheel():
         else:
             spin_able = True
             check_ball_location()
-
 
 """The following two functions are just GUI 'animations' for the slot machine"""
 def lever_pull():
@@ -533,7 +720,7 @@ def win(winner_color):
                 player_money += bet_amont * 2
             else:
                 player_money += bet_amont * 10
-    roulette_bets = [] # clear to avoid repition
+    roulette_bets = []
             
 def deal_to_player(num_new_cards):
     """Deal cards to the player, no need to be hidden"""
@@ -794,12 +981,12 @@ def check_dealer_hand(player_hand_value):
 
 def money_update():
     """Updates the money and leaderboard"""
-    global player_money, money_text, highest_money, cheated, player_name
+    global player_money, money_text, highest_money, player_name
     if player_money > 0:
         canvas.itemconfig(money_text, text=f"${player_money}", fill="black")
     else:
         canvas.itemconfig(money_text, text=f"Out of money", fill="red")
-    if player_money > highest_money and not cheated:
+    if player_money > highest_money:
         highest_money = player_money
         update_score(player_name, highest_money - 100)
     root.after(50, money_update)
@@ -936,26 +1123,14 @@ def maybe_advance_round():
 
 def get_bet():
     """Get the players roulette bets, also hides my cheat codes, such as the json reset"""
-    global player_money, cheated
+    global player_money
     while True:
         bet_choice = simpledialog.askstring("Roulette Bet", "Bet on red, black or green:", parent=root)
         if bet_choice is None:
             return None
         bet_choice = bet_choice.lower().strip()
-        if bet_choice in ["red", "black", "green", "cooper_secret_code", "lewis_secret_code", "dylan_secret_code", "clear_json_scores"]:
-            if bet_choice == "cooper_secret_code":
-                player_money += 1000000000000
-                cheated = True
-                messagebox.showinfo("Cheated!", f"Your highscore is no longer eligble\nfor the leader board")
-            elif bet_choice == "lewis_secret_code":
-                player_money += 1000
-                cheated = True
-                messagebox.showinfo("Cheated!", f"Your highscore is no longer eligble\nfor the leader board")
-            elif bet_choice == "dylan_secret_code":
-                player_money = 1
-                cheated = True
-                messagebox.showinfo("Cheated!", f"Your highscore is no longer eligble\nfor the leader board")
-            elif bet_choice == "clear_json_scores":
+        if bet_choice in ["red", "black", "green", "clear_json_scores"]:
+            if bet_choice == "clear_json_scores":
                 clear_scores()
             else:
                 return bet_choice
@@ -964,8 +1139,8 @@ def get_bet():
 
 def on_click(event):
     """Function that detects all clicks, finds out what was clicked and runs all the functions"""
-    """Vital for this codes success"""
-    global game_selected, hit_able, bet_amount, blackjack_UI, slots_bet, slots_able, player_money, poker_middle, AI_folded, player_added, AI_added, AI2_added, poker_round, roulette_bets, need_player_to_match, speed, spin_able
+    """Vital for this codes"""
+    global game_selected, hit_able, bet_amount, blackjack_UI, player_assets, stock_prices, player_stock_amount, slots_bet, slots_able, player_money, poker_middle, AI_folded, player_added, AI_added, AI2_added, poker_round, roulette_bets, need_player_to_match, speed, spin_able
     clicked = canvas.find_closest(event.x, event.y)
     tags = canvas.gettags(clicked)
     if roulette in tags and game_selected != roulette:
@@ -1062,12 +1237,59 @@ def on_click(event):
         show_leaderboard()
     elif "exit" in tags:
         awns_bool = messagebox.askquestion("Quit?", "Are you sure you want to quit?")
-        print(awns_bool)
         if awns_bool == "yes":
             money_update()
             root.destroy()
             root.quit()
-        
+    elif "stocks" in tags:
+        game_selected = "stocks"
+        stocks_game()
+    elif "buy" in tags and game_selected == "stocks":
+        bet_amount, stock_cost = place_bet_stock(stock_prices[-1])
+        if bet_amount > 0:
+            player_stock_amount += bet_amount
+            player_money -= stock_cost * bet_amount
+    elif "sell" in tags and game_selected == "stocks":
+        bet_amount, stock_cost = sell_stocks(stock_prices[-1])
+        if bet_amount > 0:
+            player_money += bet_amount * stock_cost
+            player_stock_amount -= bet_amount
+    elif "assets" in tags:
+        game_selected = "assets"
+        assets_menu()
+    elif "asset_sell" in tags and game_selected == "assets":
+        for asset in player_assets:
+            if asset["name"] == tags[1]:
+                if asset["amount"] > 0:
+                    sell_amt = simpledialog.askinteger("Sell", f"You have {asset['amount']}\nThe price of this asset is ${asset['value']}\nHow many assets do you want to sell:")
+                    if sell_amt is not None:
+                        if sell_amt > asset["amount"]:
+                            messagebox.showerror("Error", "Cannot sell more than you have")
+                        elif sell_amt == 0:
+                            messagebox.showerror("Error", "Zero assets cannot be sold")
+                        else:
+                            player_money += asset["value"] * sell_amt
+                            asset["amount"] -= sell_amt
+                            clean_UI()
+                            assets_menu()
+    elif "store" in tags:
+        game_selected = "store"
+        store_menu()
+    elif "asset_buy" in tags and game_selected == "store":
+        for asset in player_assets:
+            if asset["name"] == tags[1]:
+                amt = simpledialog.askinteger("Buy", f"You have ${player_money}\nThe price of this asset is ${asset['value']}\nHow many assets do you want to buy:")
+                if amt is not None:
+                    if amt > player_money:
+                        messagebox.showerror("Error", "Cannot buy more than you have")
+                    elif amt == 0:
+                        messagebox.showerror("Error", "Zero assets cannot be sold")
+                    else:
+                        player_money -= asset["value"] * amt
+                        asset["amount"] += amt
+                        clean_UI()
+                        store_menu()
+            
 def player_check():
     """Check button functionality"""
     global player_money, poker_middle, AI_folded, player_added, AI_added, AI2_added, poker_round, need_player_to_match
@@ -1398,6 +1620,7 @@ root.focus_force()
 
 """Nessecary things"""
 money_update()
+simulate_stock_price()
 poker_middle_update()
 canvas.bind("<Button-1>", on_click)
 root.mainloop()
