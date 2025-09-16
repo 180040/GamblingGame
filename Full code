@@ -38,9 +38,9 @@ slots_button = canvas.create_rectangle(700, button_height*2, button_width + 700,
 slots_text = canvas.create_text(button_width/2 + 700, button_height*2.5,text="Store", fill="white", font=text_font, tags="store")
 poker_button = canvas.create_rectangle(700, button_height*3, button_width+ 700, button_height*4,fill="#072475", tags="assets", outline="")
 poker_text = canvas.create_text(button_width/2+ 700, button_height*3.5,text="Assets", fill="white", font=text_font, tags="assets")
-scoreboard_button = canvas.create_rectangle(700, button_height*4, button_width+ 700, button_height*5,fill="black", tags="scoreboard", outline="")
-scoreboard_text = canvas.create_text(button_width/2+ 700, button_height*4.5,text="Employment", fill="white", font=text_font, tags="scoreboard")
-#Main UI things
+scoreboard_button = canvas.create_rectangle(700, button_height*4, button_width+ 700, button_height*5,fill="black", tags="job", outline="")
+scoreboard_text = canvas.create_text(button_width/2+ 700, button_height*4.5,text="Job", fill="white", font=text_font, tags="job")
+# Main UI things
 table = canvas.create_oval(130, -300, 670, 300, fill="#016D29", outline="", tags="table")
 main_text = canvas.create_text (400, 50, text="Select", fill="black", font=("Helvetica", 24, "bold"))
 money_text = canvas.create_text(400, 375, text=f"$0", fill="black", font=("Helvetica", 30, "bold"), tags="money_text")
@@ -65,7 +65,7 @@ game_selected = None
 hit_able = True
 poker_able = True
 raise_able = True
-player_money = 100
+player_money = 10000
 poker_middle = 10
 hand_value = 0
 AI_added = 0
@@ -98,14 +98,17 @@ poker_middle_text = None
 poker_round = 0
 assets_UI = []
 spin_able = True
+rented_houses = 0
 roulette_bets = []
 arcs = []
 speed = 100
 ball = 0
+total_assets = 1
 highest_money = 0
 angle = 0
 slot_extra_UI = []
 wheel_angle = 0
+job_solution = 0
 slots_able = True
 need_player_to_match = False
 rank_map = {"2":2,"3":3,"4":4,"5":5,"6":6,"7":7,
@@ -125,19 +128,21 @@ HAND_NAMES = {
 player_assets = [{"name": "Car", "value": 30000, "amount": 1},
                  {"name": "Watch", "value": 35000, "amount": 0},
                  {"name": "Diamond chain", "value": 50000, "amount": 0},
-                 {"name": "House", "value": 8000000, "amount": 1},
-                 {"name": "Supercar", "value": 60000000, "amount": 0},
+                 {"name": "House", "value": 800000, "amount": 0},
                  {"name": "Yacht", "value": 15000000, "amount": 0},
+                 {"name": "Supercar", "value": 60000000, "amount": 0},
                  {"name": "Private Jet", "value": 30000000, "amount": 0},
                  {"name": "NBA team", "value": 5000000000, "amount": 0},
                  {"name": "Lewis trophy", "value": 1000000000000000, "amount": 0}]
 
 def generate_stock():
-    price_increase = [-6, -5, -4, -3, -2, -1, 1, 2, 3, 4, 5, 6]
+    price_increase = [-6, -5, -4, -3, -2, -1, 1, 2, 3, 4]
     price = 10
     list_ = []
     for _ in range(30):
         price += random.choice(price_increase)
+        if price < 0:
+            price = 0
         list_.append(price)
     return list_
 stock_prices = generate_stock()  
@@ -306,6 +311,45 @@ def roulette_game():
     roulette_UI.append(spin_text)
     roulette_UI.append(bet_button)
     roulette_UI.append(bet_text)
+
+def job_menu():
+    """Setup for stocks game"""
+    global stocks_UI, stock_price_text
+    clean_UI()
+    cover = canvas.create_rectangle(100, 0, 700, 500, fill="white")
+    stocks_UI.append(cover)
+    canvas.tag_raise(money_text)
+    canvas.tag_raise(main_text)
+    canvas.itemconfig(main_text, text="Accounting")
+    solve_button = canvas.create_rectangle(600, 350, 700, 400, fill="lime", tags="solve")
+    solve_text = canvas.create_text(650, 375, text="Solve", fill="black", font=("Helvetica", 22, "bold"), tags="solve")
+    stocks_UI.append(solve_button)
+    stocks_UI.append(solve_text)
+    box = canvas.create_rectangle(150, 85, 650, 325, outline="black", width=2)
+    stocks_UI.append(box)
+
+def job_problem():
+    global stocks_UI, job_solution
+    operations = ["+", "-", "x"]
+    operation1 = random.choice(operations)
+    operations.remove(operation1)
+    num1 = random.randint(1,15)
+    num2 = random.randint(1,15)
+    operation2 = random.choice(operations)
+    num3 = random.randint(1,15)
+    if len(f"{num1} {operation1} {num2} {operation2} {num3}") == 9:
+        x = 300
+    elif len(f"{num1} {operation1} {num2} {operation2} {num3}") == 10:
+        x = 250
+    else:
+        x = 200
+    problem = canvas.create_text(x, (85 + 325)/2, anchor="w", text=f"{num1} {operation1} {num2} {operation2} {num3}", fill="black", font=("Helvetica", 50, "bold"), tags="buy")
+    stocks_UI.append(problem)
+    if operation1 == "x":
+        operation1 = "*"
+    if operation2 == "x":
+        operation2 = "*"
+    job_solution = round(eval(f"{num1} {operation1} {num2} {operation2} {num3}"), 2)
     
 def blackjack_game(bet_amount):
     """Setup for blackjack"""
@@ -358,7 +402,6 @@ def stocks_game():
     cover = canvas.create_rectangle(100, 0, 700, 500, fill="white")
     stocks_UI.append(cover)
     canvas.tag_raise(money_text)
-    canvas.itemconfig(main_text, text="Stocks")
     buy_button = canvas.create_rectangle(600, 350, 700, 400, fill="lime", tags="buy")
     buy_text = canvas.create_text(650, 375, text="Buy", fill="black", font=("Helvetica", 22, "bold"), tags="buy")
     sell_button = canvas.create_rectangle(600, 300, 700, 350, fill="red", tags="sell")
@@ -376,7 +419,7 @@ def stocks_game():
 
 def assets_menu():
     """Setup for stocks game"""
-    global assets_UI, player_assets
+    global assets_UI, player_assets, amount_of_rents
     clean_UI()
     cover = canvas.create_rectangle(100, 0, 700, 500, fill="white")
     assets_UI.append(cover)
@@ -395,6 +438,15 @@ def assets_menu():
             colour = "red"
         sell_button = canvas.create_rectangle(630, start_y+2, 670, start_y+23, fill=colour, tags=("asset_sell", f"{asset['name']}"))
         sell_text = canvas.create_text(633, start_y+1.5, anchor="nw", text="Sell", fill="white", font=("Helvetica", 15, "bold"), tags=("asset_sell", f"{asset['name']}"))
+        if asset["amount"] > 0:
+            colour = "green"
+        else:
+            colour = "grey"
+        if asset["name"] == "House":
+            rent_button = canvas.create_rectangle(570, start_y+2, 620, start_y+23, fill=colour, tags=("asset_rent", f"{asset['name']}"))
+            rent_text = canvas.create_text(573, start_y+1.5, anchor="nw", text="Rent", fill="white", font=("Helvetica", 15, "bold"), tags=("asset_rent", f"{asset['name']}"))
+            assets_UI.append(rent_button)
+            assets_UI.append(rent_text)
         if asset["name"] != "Lewis trophy":
             line = canvas.create_line(125, start_y + 25, 680, start_y + 25, fill="grey", width=1)
         assets_UI.append(text)
@@ -981,9 +1033,12 @@ def check_dealer_hand(player_hand_value):
 
 def money_update():
     """Updates the money and leaderboard"""
-    global player_money, money_text, highest_money, player_name
+    global player_money, money_text, highest_money, player_name, total_assets, player_stock_amount
     if player_money > 0:
-        canvas.itemconfig(money_text, text=f"${player_money}", fill="black")
+        formatted = format(player_money, ",")
+        canvas.itemconfig(money_text, text=f"${formatted}", fill="black")
+    elif total_assets == 0 and player_stock_amount == 0:
+        canvas.itemconfig(money_text, text=f"Bankrupt", fill="red")
     else:
         canvas.itemconfig(money_text, text=f"Out of money", fill="red")
     if player_money > highest_money:
@@ -1140,7 +1195,7 @@ def get_bet():
 def on_click(event):
     """Function that detects all clicks, finds out what was clicked and runs all the functions"""
     """Vital for this codes"""
-    global game_selected, hit_able, bet_amount, blackjack_UI, player_assets, stock_prices, player_stock_amount, slots_bet, slots_able, player_money, poker_middle, AI_folded, player_added, AI_added, AI2_added, poker_round, roulette_bets, need_player_to_match, speed, spin_able
+    global game_selected, hit_able, bet_amount, total_assets, job_solution, rented_houses, blackjack_UI, player_assets, stock_prices, player_stock_amount, slots_bet, slots_able, player_money, poker_middle, AI_folded, player_added, AI_added, AI2_added, poker_round, roulette_bets, need_player_to_match, speed, spin_able
     clicked = canvas.find_closest(event.x, event.y)
     tags = canvas.gettags(clicked)
     if roulette in tags and game_selected != roulette:
@@ -1270,6 +1325,7 @@ def on_click(event):
                         else:
                             player_money += asset["value"] * sell_amt
                             asset["amount"] -= sell_amt
+                            total_assets -= sell_amt
                             clean_UI()
                             assets_menu()
     elif "store" in tags:
@@ -1280,16 +1336,56 @@ def on_click(event):
             if asset["name"] == tags[1]:
                 amt = simpledialog.askinteger("Buy", f"You have ${player_money}\nThe price of this asset is ${asset['value']}\nHow many assets do you want to buy:")
                 if amt is not None:
-                    if amt > player_money:
-                        messagebox.showerror("Error", "Cannot buy more than you have")
+                    if amt * asset["value"] > player_money:
+                        messagebox.showerror("Error", "Cannot afford this")
                     elif amt == 0:
                         messagebox.showerror("Error", "Zero assets cannot be sold")
                     else:
                         player_money -= asset["value"] * amt
                         asset["amount"] += amt
+                        total_assets += amt
                         clean_UI()
                         store_menu()
+    elif "asset_rent" in tags and game_selected == "assets":
+        for asset in player_assets:
+            if asset["name"] == tags[1] and asset["amount"] > 0:
+                awns_bool = messagebox.askquestion("Rent?", "You will make $700 every 25s\nYou cannot take back ownership\nAre you sure you want to rent out your house?")
+                if awns_bool == "yes":
+                    amt = simpledialog.askinteger("Rent", f"You have {asset['amount']}\nHow many assets do you want to rent:")
+                    if amt is not None:
+                        if amt > asset["amount"]:
+                            messagebox.showerror("Error", "Cannot rent more than you have")
+                        elif amt == 0:
+                            messagebox.showerror("Error", "Zero assets cannot be rented")
+                        else:
+                            asset["amount"] -= amt
+                            total_assets -= amt
+                            rented_houses += amt
+                            clean_UI()
+                            assets_menu()
+    elif "job" in tags and game_selected != "job":
+        game_selected = "job"
+        job_menu()
+        job_problem()
+    elif "solve" in tags and game_selected == "job":
+        awns = simpledialog.askfloat("Input", "What is the solution to this problem:")
+        if awns is not None:
+            if awns == job_solution:
+                player_money += 100
+                clean_UI()
+                job_menu()
+                job_problem()
+            else:
+                messagebox.showerror("Wrong", f"Inncorect awnser\nit was {job_solution}")
+                clean_UI()
+                job_menu()
+                job_problem()
             
+def rent_pay():
+    global player_money, rented_houses
+    player_money += 700 * rented_houses
+    canvas.after(25000, rent_pay)
+                
 def player_check():
     """Check button functionality"""
     global player_money, poker_middle, AI_folded, player_added, AI_added, AI2_added, poker_round, need_player_to_match
@@ -1620,6 +1716,7 @@ root.focus_force()
 
 """Nessecary things"""
 money_update()
+rent_pay()
 simulate_stock_price()
 poker_middle_update()
 canvas.bind("<Button-1>", on_click)
