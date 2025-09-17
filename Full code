@@ -16,30 +16,34 @@ canvas.pack()
 """More TK stuff, the visible stuff tho"""
 main_area = canvas.create_rectangle(100, 0, 700, 400, fill="white", tags="main")
 table = canvas.create_oval(130, -300, 670, 300, fill="green", outline="", tags="table")
-button_width = 100
-button_height = 80
-text_font = ("Helvetica", 11, "bold")
-roulette_button = canvas.create_rectangle(0, 0, button_width, button_height,fill="black", tags="roulette", outline="")
-roulette_text = canvas.create_text(button_width/2, button_height/2,text="Roulette", fill="white", font=text_font, tags="roulette")
-blackjack_button = canvas.create_rectangle(0, button_height, button_width, button_height*2,fill="#072475", tags="blackjack", outline="")
-blackjack_text = canvas.create_text(button_width/2, button_height*1.5,text="Blackjack", fill="white", font=text_font, tags="blackjack")
-slots_button = canvas.create_rectangle(0, button_height*2, button_width, button_height*3,fill="#13563B", tags="slots", outline="")
-slots_text = canvas.create_text(button_width/2, button_height*2.5,text="Slots", fill="white", font=text_font, tags="slots")
-poker_button = canvas.create_rectangle(0, button_height*3, button_width, button_height*4,fill="#A46928", tags="poker", outline="")
-poker_text = canvas.create_text(button_width/2, button_height*3.5,text="Poker", fill="white", font=text_font, tags="poker")
-scoreboard_button = canvas.create_rectangle(0, button_height*4, button_width, button_height*5,fill="#E4A700", tags="scoreboard", outline="")
-scoreboard_text = canvas.create_text(button_width/2, button_height*4.5,text="Scoreboard", fill="white", font=text_font, tags="scoreboard")
+button_width = 100                        #All the button measuremnts use to add more buttons
+button_height = 66.66666                  #All the button measuremnts use to add more buttons
+text_font = ("Helvetica", 11, "bold")     #All the button measuremnts use to add more buttons
+canvas.create_rectangle(0, 0, button_width, button_height,fill="black", tags="roulette", outline="")
+canvas.create_text(button_width/2, button_height/2,text="Roulette", fill="white", font=text_font, tags="roulette")
+canvas.create_rectangle(0, button_height, button_width, button_height*2,fill="purple", tags="blackjack", outline="")
+canvas.create_text(button_width/2, button_height*1.5,text="Blackjack", fill="white", font=text_font, tags="blackjack")
+canvas.create_rectangle(0, button_height*2, button_width, button_height*3,fill="#072475", tags="slots", outline="")
+canvas.create_text(button_width/2, button_height*2.5,text="Slots", fill="white", font=text_font, tags="slots")
+canvas.create_rectangle(0, button_height*3, button_width, button_height*4,fill="#13563B", tags="poker", outline="")
+canvas.create_text(button_width/2, button_height*3.5,text="Poker", fill="white", font=text_font, tags="poker")
+canvas.create_rectangle(0, button_height*4, button_width, button_height*5,fill="#A46928", tags="scoreboard", outline="")
+canvas.create_text(button_width/2, button_height*4.5,text="Scoreboard", fill="white", font=text_font, tags="scoreboard")
+canvas.create_rectangle(0, button_height*5, button_width, button_height*6,fill="#E4A700", tags="bank", outline="")
+canvas.create_text(button_width/2, button_height*5.5,text="Food/Drink", fill="white", font=text_font, tags="bank")
 # Right side button
-exit_button = canvas.create_rectangle(700, 0, button_width + 700, button_height,fill="#E4A700", tags="exit", outline="")
-exit_text = canvas.create_text(button_width/2 + 700, button_height/2,text="Cash out", fill="white", font=text_font, tags="exit")
-blackjack_button = canvas.create_rectangle(700, button_height, button_width + 700, button_height*2,fill="#A46928", tags="stocks", outline="")
-blackjack_text = canvas.create_text(button_width/2 + 700, button_height*1.5,text="Stocks", fill="white", font=text_font, tags="stocks")
-slots_button = canvas.create_rectangle(700, button_height*2, button_width + 700, button_height*3,fill="#13563B", tags="store", outline="")
-slots_text = canvas.create_text(button_width/2 + 700, button_height*2.5,text="Store", fill="white", font=text_font, tags="store")
-poker_button = canvas.create_rectangle(700, button_height*3, button_width+ 700, button_height*4,fill="#072475", tags="assets", outline="")
-poker_text = canvas.create_text(button_width/2+ 700, button_height*3.5,text="Assets", fill="white", font=text_font, tags="assets")
-scoreboard_button = canvas.create_rectangle(700, button_height*4, button_width+ 700, button_height*5,fill="black", tags="job", outline="")
-scoreboard_text = canvas.create_text(button_width/2+ 700, button_height*4.5,text="Job", fill="white", font=text_font, tags="job")
+canvas.create_rectangle(700, 0, button_width + 700, button_height,fill="#E4A700", tags="exit", outline="")
+canvas.create_text(button_width/2 + 700, button_height/2,text="Cash out", fill="white", font=text_font, tags="exit")
+canvas.create_rectangle(700, button_height, button_width + 700, button_height*2,fill="#A46928", tags="stocks", outline="")
+canvas.create_text(button_width/2 + 700, button_height*1.5,text="Stocks", fill="white", font=text_font, tags="stocks")
+canvas.create_rectangle(700, button_height*2, button_width + 700, button_height*3,fill="#13563B", tags="store", outline="")
+canvas.create_text(button_width/2 + 700, button_height*2.5,text="Store", fill="white", font=text_font, tags="store")
+canvas.create_rectangle(700, button_height*3, button_width+ 700, button_height*4,fill="#072475", tags="assets", outline="")
+canvas.create_text(button_width/2+ 700, button_height*3.5,text="Assets", fill="white", font=text_font, tags="assets")
+canvas.create_rectangle(700, button_height*4, button_width+ 700, button_height*5,fill="purple", tags="job", outline="")
+canvas.create_text(button_width/2+ 700, button_height*4.5,text="Job", fill="white", font=text_font, tags="job")
+canvas.create_rectangle(700, button_height*5, button_width+ 700, button_height*6,fill="black", tags="bank", outline="")
+canvas.create_text(button_width/2+ 700, button_height*5.5,text="Bank", fill="white", font=text_font, tags="bank")
 # Main UI things
 table = canvas.create_oval(130, -300, 670, 300, fill="#016D29", outline="", tags="table")
 main_text = canvas.create_text (400, 50, text="Select", fill="black", font=("Helvetica", 24, "bold"))
@@ -83,6 +87,7 @@ AI2_chips = []
 after_handle = None
 slot_machine = 0
 slots_bet = 0
+player_loan_amount = 0
 AI_hand = []
 AI_UI = []
 AI2_UI = []
@@ -97,6 +102,7 @@ red_suits = ["♥", "♦"]
 poker_middle_text = None
 poker_round = 0
 assets_UI = []
+bank_UI = []
 spin_able = True
 rented_houses = 0
 roulette_bets = []
@@ -104,6 +110,7 @@ arcs = []
 speed = 100
 ball = 0
 total_assets = 1
+player_bank_amount = 3000
 highest_money = 0
 angle = 0
 slot_extra_UI = []
@@ -216,7 +223,7 @@ def poker_middle_update():
 
 def clean_UI():
     """Clears the UI"""
-    global blackjack_UI, poker_UI, slots_UI, roulette_UI, arcs, ball, slot_extra_UI, slots, slots_nums, stocks_UI, assets_UI
+    global blackjack_UI, poker_UI, slots_UI, roulette_UI, arcs, ball, slot_extra_UI, bank_UI, slots, slots_nums, stocks_UI, assets_UI
     for ui_list in [blackjack_UI, poker_UI, slots_UI, roulette_UI]:
         for ui_item in ui_list:
             canvas.delete(ui_item)
@@ -234,8 +241,11 @@ def clean_UI():
         canvas.delete(stock_UI)
     for asset_UI in assets_UI:
         canvas.delete(asset_UI)
+    for bank_UI_ in bank_UI:
+        canvas.delete(bank_UI_)
     canvas.delete("stock_line")
     stocks_UI = []
+    bank_UI = []
     assets = []
     slots = []
     slots_nums = []
@@ -1380,11 +1390,61 @@ def on_click(event):
                 clean_UI()
                 job_menu()
                 job_problem()
-            
+    elif "bank" in tags and game_selected != "bank":
+        game_selected = "bank"
+        bank_menu()
+
+def bank_menu():
+    """Setup for stocks game"""
+    global bank_UI, player_loan_amount, player_bank_amount, player_money, player_assets
+    clean_UI()
+    cover = canvas.create_rectangle(100, 0, 700, 500, fill="white")
+    stocks_UI.append(cover)
+    canvas.tag_raise(money_text)
+    canvas.tag_raise(main_text)
+    canvas.itemconfig(main_text, text="Bank")
+    loan_button = canvas.create_rectangle(250, 300, 350, 350, fill="yellow", tags="loan")
+    loan_text = canvas.create_text(300, 325, text="Loan", fill="black", font=("Helvetica", 22, "bold"), tags="loan")
+    deposit_button = canvas.create_rectangle(450, 300, 350, 350, fill="blue", tags="deposit")
+    deposit_text = canvas.create_text(400, 325, text="Deposit", fill="black", font=("Helvetica", 19, "bold"), tags="deposit")
+    withdraw_button = canvas.create_rectangle(550, 300, 450, 350, fill="lime", tags="withdraw")
+    withdraw_text = canvas.create_text(500, 325, text="Withdraw", fill="black", font=("Helvetica", 16, "bold"), tags="withdraw")
+    hint_text = canvas.create_text(400, 20, text="Hint: The more better assets you own, the more the loan", fill="black", font=("Helvetica", 10), tags="loan")
+    bank_UI.append(loan_button)
+    bank_UI.append(loan_text)
+    bank_UI.append(deposit_button)
+    bank_UI.append(deposit_text)
+    bank_UI.append(withdraw_button)
+    bank_UI.append(withdraw_text)
+    bank_UI.append(hint_text)
+    player_assets_value = 0
+    for i in player_assets:
+        player_assets_value += i["value"] * i["amount"]
+    loan_display = canvas.create_text(125, 105, text="Loan", fill="black", anchor="w", font=("Helvetica", 22, "bold"))
+    loan_amount = canvas.create_text(300, 105, text=f"${player_loan_amount}", fill="black", anchor="w", font=("Helvetica", 22, "bold"))
+    loan_max_amount = canvas.create_text(300, 135, text=f"Max: ${(player_money+player_bank_amount+player_assets_value)//4}", fill="black", anchor="w", font=("Helvetica", 22, "bold"))
+    bank_UI.append(loan_display)
+    bank_UI.append(loan_amount)
+    bank_UI.append(loan_max_amount)
+    deposit_display = canvas.create_text(125, 205, text="Account", fill="black",  anchor="w",font=("Helvetica", 22, "bold"))
+    deposit_amount = canvas.create_text(300, 205, text=f"${player_bank_amount}", anchor="w", fill="black", font=("Helvetica", 22, "bold"))
+    deposit_max_amount = canvas.create_text(300, 235, text=f"Interest: 3% every 45s", fill="black", anchor="w", font=("Helvetica", 22, "bold"))
+    bank_UI.append(deposit_display)
+    bank_UI.append(deposit_amount)
+    bank_UI.append(deposit_max_amount)
+    
 def rent_pay():
     global player_money, rented_houses
     player_money += 700 * rented_houses
     canvas.after(25000, rent_pay)
+
+def bank_interest():
+    global player_bank_amount, game_selected
+    if bank_interest != 0:
+        player_bank_amount = round(1.03 * player_bank_amount, 2)
+    if game_selected == "bank":
+        bank_menu()
+    canvas.after(45000, bank_interest)
                 
 def player_check():
     """Check button functionality"""
@@ -1717,6 +1777,7 @@ root.focus_force()
 """Nessecary things"""
 money_update()
 rent_pay()
+bank_interest()
 simulate_stock_price()
 poker_middle_update()
 canvas.bind("<Button-1>", on_click)
