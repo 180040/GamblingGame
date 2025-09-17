@@ -10,7 +10,7 @@ from collections import Counter
 """Tk stuff"""
 root = tk.Tk()
 root.title("Make money!")
-canvas = tk.Canvas(root, width=800, height=400, bg="white")
+canvas = tk.Canvas(root, width=800, height=450, bg="white")
 canvas.pack()
 
 """More TK stuff, the visible stuff tho"""
@@ -48,6 +48,10 @@ canvas.create_text(button_width/2+ 700, button_height*5.5,text="Bank", fill="whi
 table = canvas.create_oval(130, -300, 670, 300, fill="#016D29", outline="", tags="table")
 main_text = canvas.create_text (400, 50, text="Select", fill="black", font=("Helvetica", 24, "bold"))
 money_text = canvas.create_text(400, 375, text=f"$0", fill="black", font=("Helvetica", 30, "bold"), tags="money_text")
+canvas.create_rectangle(0, 400, 800, 450, fill="grey", outline = "")
+canvas.create_text(5, 420, text="\U0001F357", anchor="w", font=("Helvetica", 30, "bold"))
+canvas.create_text(255, 420, text="\U0001FAD7", anchor="w", font=("Helvetica", 30, "bold"))
+canvas.create_text(505, 420, text="\U0001F37B", anchor="w", font=("Helvetica", 30, "bold"))
 
 """Variable"""
 roulette = "roulette"
@@ -105,6 +109,9 @@ assets_UI = []
 bank_UI = []
 spin_able = True
 rented_houses = 0
+player_hunger = 0
+player_thirst = 0
+player_sober = 0
 roulette_bets = []
 arcs = []
 speed = 100
@@ -116,6 +123,7 @@ angle = 0
 slot_extra_UI = []
 wheel_angle = 0
 job_solution = 0
+player_loan_max = 0
 slots_able = True
 need_player_to_match = False
 rank_map = {"2":2,"3":3,"4":4,"5":5,"6":6,"7":7,
@@ -269,6 +277,49 @@ def place_bet():
     else:
         return bet 
 
+
+hunger_bar_ = canvas.create_rectangle(50, 410, 250, 440, fill="grey", width=5)
+thirst_bar_ = canvas.create_rectangle(300, 410, 500, 440, fill="grey", width=5)
+sober_bar_ = canvas.create_rectangle(550, 410, 790, 440, fill="grey", width=5)
+sober_over_bar = canvas.create_rectangle(700, 413, 705, 438, fill="red", outline="")
+hunger_bar = canvas.create_rectangle(50, 410, 250, 440, fill="brown")
+thirst_bar = canvas.create_rectangle(300, 410, 500, 440, fill="cyan")
+sober_bar = canvas.create_rectangle(550, 410, 790, 440, fill="green")
+
+def player_hunger_bar():
+    global player_hunger, hunger_bar
+    x_lim = 250-player_hunger*2
+    canvas.coords(hunger_bar, 50, 410, x_lim, 440)
+    canvas.after(100, player_hunger_bar)
+
+def player_thirst_bar():
+    global player_thirst, thirst_bar
+    x_lim = 500-player_thirst*2
+    canvas.coords(thirst_bar, 300, 410, x_lim, 440)
+    canvas.after(100, player_thirst_bar)
+
+def player_sober_bar():
+    global player_sober, sober_bar
+    x_lim = player_sober*2 + 550
+    canvas.coords(sober_bar, 550, 410, x_lim, 440)
+    canvas.after(100, player_sober_bar)
+
+def player_stats_update():
+    global player_sober, player_thirst, player_hunger
+    if player_sober > 0.5:
+        player_sober -= 0.5
+    else:
+        player_sober = 0
+    if player_thirst < 99.5:
+        player_thirst += 0.5
+    else:
+        player_thirst = 100
+    if player_hunger < 99.8:
+        player_hunger += 0.2
+    else:
+        player_hunger = 100
+    canvas.after(2000, player_stats_update)
+
 def place_bet_stock(stock_price):
     """Places the bet for the stock functions"""
     global player_money, game_selected, stock_prices
@@ -326,7 +377,7 @@ def job_menu():
     """Setup for stocks game"""
     global stocks_UI, stock_price_text
     clean_UI()
-    cover = canvas.create_rectangle(100, 0, 700, 500, fill="white")
+    cover = canvas.create_rectangle(100, 0, 700, 400, fill="white")
     stocks_UI.append(cover)
     canvas.tag_raise(money_text)
     canvas.tag_raise(main_text)
@@ -409,7 +460,7 @@ def stocks_game():
     """Setup for stocks game"""
     global stocks_UI, stock_price_text
     clean_UI()
-    cover = canvas.create_rectangle(100, 0, 700, 500, fill="white")
+    cover = canvas.create_rectangle(100, 0, 700, 400, fill="white")
     stocks_UI.append(cover)
     canvas.tag_raise(money_text)
     buy_button = canvas.create_rectangle(600, 350, 700, 400, fill="lime", tags="buy")
@@ -431,7 +482,7 @@ def assets_menu():
     """Setup for stocks game"""
     global assets_UI, player_assets, amount_of_rents
     clean_UI()
-    cover = canvas.create_rectangle(100, 0, 700, 500, fill="white")
+    cover = canvas.create_rectangle(100, 0, 700, 400, fill="white")
     assets_UI.append(cover)
     canvas.tag_raise(money_text)
     canvas.tag_raise(main_text)
@@ -470,7 +521,7 @@ def store_menu():
     """Setup for stocks game"""
     global assets_UI, player_assets, player_money
     clean_UI()
-    cover = canvas.create_rectangle(100, 0, 700, 500, fill="white")
+    cover = canvas.create_rectangle(100, 0, 700, 400, fill="white")
     assets_UI.append(cover)
     canvas.tag_raise(money_text)
     canvas.tag_raise(main_text)
@@ -1045,7 +1096,9 @@ def money_update():
     """Updates the money and leaderboard"""
     global player_money, money_text, highest_money, player_name, total_assets, player_stock_amount
     if player_money > 0:
-        formatted = format(player_money, ",")
+        player_money = float(player_money)
+        formatted = round(player_money, 2)
+        formatted = format(formatted, ",")
         canvas.itemconfig(money_text, text=f"${formatted}", fill="black")
     elif total_assets == 0 and player_stock_amount == 0:
         canvas.itemconfig(money_text, text=f"Bankrupt", fill="red")
@@ -1205,7 +1258,7 @@ def get_bet():
 def on_click(event):
     """Function that detects all clicks, finds out what was clicked and runs all the functions"""
     """Vital for this codes"""
-    global game_selected, hit_able, bet_amount, total_assets, job_solution, rented_houses, blackjack_UI, player_assets, stock_prices, player_stock_amount, slots_bet, slots_able, player_money, poker_middle, AI_folded, player_added, AI_added, AI2_added, poker_round, roulette_bets, need_player_to_match, speed, spin_able
+    global game_selected, hit_able, bet_amount, total_assets, player_loan_max, player_loan_amount, player_bank_amount, job_solution, rented_houses, blackjack_UI, player_assets, stock_prices, player_stock_amount, slots_bet, slots_able, player_money, poker_middle, AI_folded, player_added, AI_added, AI2_added, poker_round, roulette_bets, need_player_to_match, speed, spin_able
     clicked = canvas.find_closest(event.x, event.y)
     tags = canvas.gettags(clicked)
     if roulette in tags and game_selected != roulette:
@@ -1393,12 +1446,66 @@ def on_click(event):
     elif "bank" in tags and game_selected != "bank":
         game_selected = "bank"
         bank_menu()
+    elif "withdraw" in tags and game_selected == "bank":
+        awns = simpledialog.askfloat("Input", "How much do you want to withdraw:")
+        if awns is not None:
+            if awns <= player_bank_amount:
+                player_money += awns
+                player_bank_amount -= awns
+                bank_menu()
+            else:
+                awns_bool = messagebox.askquestion("All?", "Do you want to empty your bank account?")
+                if awns_bool == "yes":
+                    player_money += player_bank_amount
+                    player_bank_amount = 0
+                    bank_menu()
+    elif "deposit" in tags and game_selected == "bank":
+        awns = simpledialog.askfloat("Input", "How much do you want to deposit:")
+        if awns is not None:
+            if awns <= player_money:
+                player_bank_amount += awns
+                player_money -= awns
+                bank_menu()
+            else:
+                awns_bool = messagebox.askquestion("All?", "Do you want to empty your pockets?")
+                if awns_bool == "yes":
+                    player_bank_amount += player_money
+                    player_money = 0
+                    bank_menu()
+    elif "loan" in tags and game_selected == "bank":
+        awns_bool = messagebox.askquestion("Loan?", "Do you want to take out a loan?\n'No' to payback, 'Yes' to take out")
+        if awns_bool == "yes":
+            awns = simpledialog.askfloat("Input", "How much do you want to take out:")
+            if awns is not None:
+                if awns + player_loan_amount <= player_loan_max:
+                    player_money += awns
+                    player_loan_amount += awns
+                    bank_menu()
+                else:
+                    awns_bool = messagebox.askquestion("All?", "Do you want to max your loan?")
+                    if awns_bool == "yes":
+                        player_money += player_loan_max - player_loan_amount
+                        player_loan_amount = player_loan_max
+                        bank_menu()
+        else:
+            awns = simpledialog.askfloat("Input", "How much do you want to payback:")
+            if awns is not None:
+                if player_loan_amount - awns >= 0:
+                    player_loan_amount -= awns
+                    player_money -= awns
+                    bank_menu()
+                else:
+                    awns_bool = messagebox.askquestion("All?", "Do you want to fully pay your loan?")
+                    if awns_bool == "yes":
+                        player_money -= player_loan_amount
+                        player_loan_amount = 0
+                        bank_menu()
 
 def bank_menu():
-    """Setup for stocks game"""
-    global bank_UI, player_loan_amount, player_bank_amount, player_money, player_assets
+    """Setup for bank menu"""
+    global bank_UI, player_loan_amount, player_bank_amount, player_money, player_assets, player_loan_max
     clean_UI()
-    cover = canvas.create_rectangle(100, 0, 700, 500, fill="white")
+    cover = canvas.create_rectangle(100, 0, 700, 400, fill="white")
     stocks_UI.append(cover)
     canvas.tag_raise(money_text)
     canvas.tag_raise(main_text)
@@ -1409,25 +1516,30 @@ def bank_menu():
     deposit_text = canvas.create_text(400, 325, text="Deposit", fill="black", font=("Helvetica", 19, "bold"), tags="deposit")
     withdraw_button = canvas.create_rectangle(550, 300, 450, 350, fill="lime", tags="withdraw")
     withdraw_text = canvas.create_text(500, 325, text="Withdraw", fill="black", font=("Helvetica", 16, "bold"), tags="withdraw")
-    hint_text = canvas.create_text(400, 20, text="Hint: The more better assets you own, the more the loan", fill="black", font=("Helvetica", 10), tags="loan")
     bank_UI.append(loan_button)
     bank_UI.append(loan_text)
     bank_UI.append(deposit_button)
     bank_UI.append(deposit_text)
     bank_UI.append(withdraw_button)
     bank_UI.append(withdraw_text)
-    bank_UI.append(hint_text)
     player_assets_value = 0
     for i in player_assets:
         player_assets_value += i["value"] * i["amount"]
+    if (player_money+player_bank_amount+player_assets_value-player_loan_amount)//4 > 0:
+        player_loan_max = (player_money+player_bank_amount+player_assets_value-player_loan_amount)//4
+    else:
+        player_loan_max = 0
     loan_display = canvas.create_text(125, 105, text="Loan", fill="black", anchor="w", font=("Helvetica", 22, "bold"))
-    loan_amount = canvas.create_text(300, 105, text=f"${player_loan_amount}", fill="black", anchor="w", font=("Helvetica", 22, "bold"))
-    loan_max_amount = canvas.create_text(300, 135, text=f"Max: ${(player_money+player_bank_amount+player_assets_value)//4}", fill="black", anchor="w", font=("Helvetica", 22, "bold"))
+    formatted = format(player_loan_amount, ",")
+    loan_amount = canvas.create_text(300, 105, text=f"${formatted}", fill="black", anchor="w", font=("Helvetica", 22, "bold"))
+    formatted = format(player_loan_max, ",")
+    loan_max_amount = canvas.create_text(300, 135, text=f"Max: ${formatted}", fill="black", anchor="w", font=("Helvetica", 22, "bold"))
     bank_UI.append(loan_display)
     bank_UI.append(loan_amount)
     bank_UI.append(loan_max_amount)
     deposit_display = canvas.create_text(125, 205, text="Account", fill="black",  anchor="w",font=("Helvetica", 22, "bold"))
-    deposit_amount = canvas.create_text(300, 205, text=f"${player_bank_amount}", anchor="w", fill="black", font=("Helvetica", 22, "bold"))
+    formatted = format(player_bank_amount, ",")
+    deposit_amount = canvas.create_text(300, 205, text=f"${formatted}", anchor="w", fill="black", font=("Helvetica", 22, "bold"))
     deposit_max_amount = canvas.create_text(300, 235, text=f"Interest: 3% every 45s", fill="black", anchor="w", font=("Helvetica", 22, "bold"))
     bank_UI.append(deposit_display)
     bank_UI.append(deposit_amount)
@@ -1439,9 +1551,11 @@ def rent_pay():
     canvas.after(25000, rent_pay)
 
 def bank_interest():
-    global player_bank_amount, game_selected
-    if bank_interest != 0:
+    global player_bank_amount, game_selected, player_loan_amount
+    if player_bank_amount != 0:
         player_bank_amount = round(1.03 * player_bank_amount, 2)
+    if player_loan_amount != 0:
+        player_loan_amount = round(1.03 * player_loan_amount, 2)
     if game_selected == "bank":
         bank_menu()
     canvas.after(45000, bank_interest)
@@ -1776,6 +1890,10 @@ root.focus_force()
 
 """Nessecary things"""
 money_update()
+player_hunger_bar()
+player_thirst_bar()
+player_sober_bar()
+player_stats_update()
 rent_pay()
 bank_interest()
 simulate_stock_price()
