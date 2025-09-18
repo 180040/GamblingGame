@@ -360,6 +360,7 @@ def remove_pass_out_screen():
     game_selected = None
     canvas.itemconfig(main_text, text=f"Welcome back, {player_name}")
     clean_UI()
+    clear()
 
 def player_stats_update():
     global player_sober, player_thirst, player_hunger
