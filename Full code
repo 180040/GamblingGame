@@ -1138,7 +1138,7 @@ def money_update():
     """Updates the money and leaderboard"""
     global player_money, money_text, highest_money, player_name, total_assets, player_stock_amount, player_bank_amount, player_loan_amount, player_loan_max
     if player_money > 0:
-        player_money = float(player_money)
+        player_money = int(player_money)
         formatted = round(player_money, 2)
         formatted = format(formatted, ",")
         canvas.itemconfig(money_text, text=f"${formatted}", fill="black")
@@ -1454,7 +1454,7 @@ def on_click(event):
     elif "asset_rent" in tags and game_selected == "assets":
         for asset in player_assets:
             if asset["name"] == tags[1] and asset["amount"] > 0:
-                awns_bool = messagebox.askquestion("Rent?", "You will make $700 every 25s\nYou cannot take back ownership\nAre you sure you want to rent out your house?")
+                awns_bool = messagebox.askquestion("Rent?", "You will make $25000 every 2.5s\nYou cannot take back ownership\nAre you sure you want to rent out your house?")
                 if awns_bool == "yes":
                     amt = simpledialog.askinteger("Rent", f"You have {asset['amount']}\nHow many assets do you want to rent:")
                     if amt is not None:
@@ -1489,7 +1489,7 @@ def on_click(event):
         game_selected = "bank"
         bank_menu()
     elif "withdraw" in tags and game_selected == "bank":
-        awns = simpledialog.askfloat("Input", "How much do you want to withdraw:")
+        awns = simpledialog.askinteger("Input", "How much do you want to withdraw:")
         if awns is not None:
             if awns <= player_bank_amount:
                 player_money += awns
@@ -1502,7 +1502,7 @@ def on_click(event):
                     player_bank_amount = 0
                     bank_menu()
     elif "deposit" in tags and game_selected == "bank":
-        awns = simpledialog.askfloat("Input", "How much do you want to deposit:")
+        awns = simpledialog.askinteger("Input", "How much do you want to deposit:")
         if awns is not None:
             if awns <= player_money:
                 player_bank_amount += awns
@@ -1517,18 +1517,21 @@ def on_click(event):
     elif "loan" in tags and game_selected == "bank":
         awns_bool = messagebox.askquestion("Loan?", "Do you want to take out a loan?\n'No' to payback, 'Yes' to take out")
         if awns_bool == "yes":
-            awns = simpledialog.askfloat("Input", "How much do you want to take out:")
+            awns = simpledialog.askinteger("Input", "How much do you want to take out:")
             if awns is not None:
                 if awns + player_loan_amount <= player_loan_max:
                     player_money += awns
                     player_loan_amount += awns
                     bank_menu()
                 else:
-                    awns_bool = messagebox.askquestion("All?", "Do you want to max your loan?")
-                    if awns_bool == "yes":
-                        player_money += player_loan_max - player_loan_amount
-                        player_loan_amount = player_loan_max
-                        bank_menu()
+                    if player_loan_amount > player_loan_max:
+                        messagebox.showerror("You're in debt", f"Can't take out more from this loan")
+                    else:
+                        awns_bool = messagebox.askquestion("All?", "Do you want to max your loan?")
+                        if awns_bool == "yes":
+                            player_money += player_loan_max - player_loan_amount
+                            player_loan_amount = player_loan_max
+                            bank_menu()
         else:
             awns = simpledialog.askfloat("Input", "How much do you want to payback:")
             if awns is not None:
@@ -1606,15 +1609,15 @@ def bank_menu():
     
 def rent_pay():
     global player_money, rented_houses
-    player_money += 700 * rented_houses
-    canvas.after(25000, rent_pay)
+    player_money += 25000 * rented_houses
+    canvas.after(2500, rent_pay)
 
 def bank_interest():
     global player_bank_amount, game_selected, player_loan_amount
     if player_bank_amount != 0:
-        player_bank_amount = round(1.03 * player_bank_amount, 2)
+        player_bank_amount = int(round(1.03 * player_bank_amount, 0))
     if player_loan_amount != 0:
-        player_loan_amount = round(1.03 * player_loan_amount, 2)
+        player_loan_amount = int(round(1.03 * player_loan_amount, 0))
     if game_selected == "bank":
         bank_menu()
     canvas.after(45000, bank_interest)
