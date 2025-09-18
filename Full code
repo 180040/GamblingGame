@@ -29,8 +29,8 @@ canvas.create_rectangle(0, button_height*3, button_width, button_height*4,fill="
 canvas.create_text(button_width/2, button_height*3.5,text="Poker", fill="white", font=text_font, tags="poker")
 canvas.create_rectangle(0, button_height*4, button_width, button_height*5,fill="#A46928", tags="scoreboard", outline="")
 canvas.create_text(button_width/2, button_height*4.5,text="Scoreboard", fill="white", font=text_font, tags="scoreboard")
-canvas.create_rectangle(0, button_height*5, button_width, button_height*6,fill="#E4A700", tags="bank", outline="")
-canvas.create_text(button_width/2, button_height*5.5,text="Food/Drink", fill="white", font=text_font, tags="bank")
+canvas.create_rectangle(0, button_height*5, button_width, button_height*6,fill="#E4A700", tags="food", outline="")
+canvas.create_text(button_width/2, button_height*5.5,text="Food/Drink", fill="white", font=text_font, tags="food")
 # Right side button
 canvas.create_rectangle(700, 0, button_width + 700, button_height,fill="#E4A700", tags="exit", outline="")
 canvas.create_text(button_width/2 + 700, button_height/2,text="Cash out", fill="white", font=text_font, tags="exit")
@@ -149,6 +149,16 @@ player_assets = [{"name": "Car", "value": 30000, "amount": 1},
                  {"name": "Private Jet", "value": 30000000, "amount": 0},
                  {"name": "NBA team", "value": 5000000000, "amount": 0},
                  {"name": "Lewis trophy", "value": 1000000000000000, "amount": 0}]
+
+store_items = [{"name": "Water", "price": 5, "thirst": 25, "hunger": 2, "sober": 0},
+                 {"name": "Beer", "price": 3, "thirst": 15, "hunger": 3, "sober": 10},
+                 {"name": "Vodka shot", "price": 9, "thirst": 5, "hunger": 0, "sober": 30},
+                 {"name": "Fries", "price": 10, "thirst": 0, "hunger": 20, "sober": 0},
+                 {"name": "Burger", "price": 12, "thirst": 0, "hunger": 40, "sober": 0},
+                 {"name": "Steak", "price": 15, "thirst": 0, "hunger": 60, "sober": 0},
+                 {"name": "Cocktail", "price": 18, "thirst": 25, "hunger": 2, "sober": 50},
+                 {"name": "A5 Wagyu", "price": 55, "thirst": 3, "hunger": 30, "sober": 0},
+                 {"name": "Gold bar", "price": 10000000000, "thirst": 100, "hunger": 100, "sober": 80}]
 
 def generate_stock():
     price_increase = [-6, -5, -4, -3, -2, -1, 1, 2, 3, 4]
@@ -531,7 +541,8 @@ def store_menu():
     start_y = 100
     for asset in player_assets:
         text = canvas.create_text(140, start_y, anchor="nw", text=f"{asset['name']} x {asset['amount']}", fill="black", font=("Helvetica", 15, "bold"))
-        text1 = canvas.create_text(350, start_y, anchor="nw", text=f"${asset['value']}", fill="black", font=("Helvetica", 15, "bold"))
+        formatted = format(asset['value'], ",")
+        text1 = canvas.create_text(350, start_y, anchor="nw", text=f"${formatted}", fill="black", font=("Helvetica", 15, "bold"))
         if asset["value"] <= player_money:
             colour = "green"
         else:
@@ -539,6 +550,37 @@ def store_menu():
         buy_button = canvas.create_rectangle(630, start_y+2, 670, start_y+23, fill=colour, tags=("asset_buy", f"{asset['name']}"))
         buy_text = canvas.create_text(633, start_y+1.5, anchor="nw", text="Buy", fill="white", font=("Helvetica", 15, "bold"), tags=("asset_buy", f"{asset['name']}"))
         if asset["name"] != "Lewis trophy":
+            line = canvas.create_line(125, start_y + 25, 680, start_y + 25, fill="grey", width=1)
+        assets_UI.append(text)
+        assets_UI.append(text1)
+        assets_UI.append(buy_button)
+        assets_UI.append(buy_text)
+        assets_UI.append(line)
+        start_y += 25
+
+def item_menu():
+    """Setup for stocks game"""
+    global assets_UI, player_assets, player_money, store_items
+    clean_UI()
+    cover = canvas.create_rectangle(100, 0, 700, 400, fill="white")
+    assets_UI.append(cover)
+    canvas.tag_raise(money_text)
+    canvas.tag_raise(main_text)
+    canvas.itemconfig(main_text, text="Food/Drink")
+    box = canvas.create_rectangle(121.5, 90, 679, 330, fill="white", outline="black", width=2)
+    assets_UI.append(box)
+    start_y = 100
+    for item in store_items:
+        text = canvas.create_text(140, start_y, anchor="nw", text=f"{item['name']}", fill="black", font=("Helvetica", 15, "bold"))
+        formatted = format(item['price'], ",")
+        text1 = canvas.create_text(350, start_y, anchor="nw", text=f"${formatted}", fill="black", font=("Helvetica", 15, "bold"))
+        if item["price"] <= player_money:
+            colour = "green"
+        else:
+            colour = "red"
+        buy_button = canvas.create_rectangle(630, start_y+2, 670, start_y+23, fill=colour, tags=("item_buy", f"{item['name']}"))
+        buy_text = canvas.create_text(633, start_y+1.5, anchor="nw", text="Buy", fill="white", font=("Helvetica", 15, "bold"), tags=("item_buy", f"{item['name']}"))
+        if item["name"] != "Lewis trophy":
             line = canvas.create_line(125, start_y + 25, 680, start_y + 25, fill="grey", width=1)
         assets_UI.append(text)
         assets_UI.append(text1)
@@ -1094,13 +1136,13 @@ def check_dealer_hand(player_hand_value):
 
 def money_update():
     """Updates the money and leaderboard"""
-    global player_money, money_text, highest_money, player_name, total_assets, player_stock_amount
+    global player_money, money_text, highest_money, player_name, total_assets, player_stock_amount, player_bank_amount, player_loan_amount, player_loan_max
     if player_money > 0:
         player_money = float(player_money)
         formatted = round(player_money, 2)
         formatted = format(formatted, ",")
         canvas.itemconfig(money_text, text=f"${formatted}", fill="black")
-    elif total_assets == 0 and player_stock_amount == 0:
+    elif total_assets == 0 and player_stock_amount == 0 and player_bank_amount == 0 and player_loan_amount >= player_loan_max:
         canvas.itemconfig(money_text, text=f"Bankrupt", fill="red")
     else:
         canvas.itemconfig(money_text, text=f"Out of money", fill="red")
@@ -1258,7 +1300,7 @@ def get_bet():
 def on_click(event):
     """Function that detects all clicks, finds out what was clicked and runs all the functions"""
     """Vital for this codes"""
-    global game_selected, hit_able, bet_amount, total_assets, player_loan_max, player_loan_amount, player_bank_amount, job_solution, rented_houses, blackjack_UI, player_assets, stock_prices, player_stock_amount, slots_bet, slots_able, player_money, poker_middle, AI_folded, player_added, AI_added, AI2_added, poker_round, roulette_bets, need_player_to_match, speed, spin_able
+    global game_selected, hit_able, bet_amount, total_assets, player_loan_max, player_hunger, player_thirst, player_sober, player_loan_amount, player_bank_amount, job_solution, rented_houses, blackjack_UI, player_assets, stock_prices, player_stock_amount, slots_bet, slots_able, player_money, poker_middle, AI_folded, player_added, AI_added, AI2_added, poker_round, roulette_bets, need_player_to_match, speed, spin_able
     clicked = canvas.find_closest(event.x, event.y)
     tags = canvas.gettags(clicked)
     if roulette in tags and game_selected != roulette:
@@ -1500,6 +1542,23 @@ def on_click(event):
                         player_money -= player_loan_amount
                         player_loan_amount = 0
                         bank_menu()
+    elif "food" in tags and game_selected != "food":
+        game_selected = "food"
+        item_menu()
+    elif "item_buy" in tags and game_selected == "food":
+        for item in store_items:
+            if item["name"] == tags[1]:
+                player_money -= item["price"]
+                if player_hunger - item["hunger"] < 0:
+                    player_hunger = 0
+                else:
+                    player_hunger -= item["hunger"]
+                if player_thirst - item["thirst"] < 0:
+                    player_thirst = 0
+                else:
+                    player_thirst -= item["thirst"]
+                player_sober += item["sober"]
+    
 
 def bank_menu():
     """Setup for bank menu"""
