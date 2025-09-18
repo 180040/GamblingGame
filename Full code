@@ -158,7 +158,7 @@ store_items = [{"name": "Water", "price": 5, "thirst": 25, "hunger": 2, "sober":
                  {"name": "Steak", "price": 15, "thirst": 0, "hunger": 60, "sober": 0},
                  {"name": "Cocktail", "price": 18, "thirst": 25, "hunger": 2, "sober": 50},
                  {"name": "A5 Wagyu", "price": 55, "thirst": 3, "hunger": 30, "sober": 0},
-                 {"name": "Gold bar", "price": 10000000000, "thirst": 100, "hunger": 100, "sober": 80}]
+                 {"name": "Deepfried Gold Trex", "price": 10000000000, "thirst": 100, "hunger": 100, "sober": 0}]
 
 def generate_stock():
     price_increase = [-6, -5, -4, -3, -2, -1, 1, 2, 3, 4]
@@ -287,11 +287,9 @@ def place_bet():
     else:
         return bet 
 
-
 hunger_bar_ = canvas.create_rectangle(50, 410, 250, 440, fill="grey", width=5)
 thirst_bar_ = canvas.create_rectangle(300, 410, 500, 440, fill="grey", width=5)
 sober_bar_ = canvas.create_rectangle(550, 410, 790, 440, fill="grey", width=5)
-sober_over_bar = canvas.create_rectangle(700, 413, 705, 438, fill="red", outline="")
 hunger_bar = canvas.create_rectangle(50, 410, 250, 440, fill="brown")
 thirst_bar = canvas.create_rectangle(300, 410, 500, 440, fill="cyan")
 sober_bar = canvas.create_rectangle(550, 410, 790, 440, fill="green")
@@ -301,23 +299,72 @@ def player_hunger_bar():
     x_lim = 250-player_hunger*2
     canvas.coords(hunger_bar, 50, 410, x_lim, 440)
     canvas.after(100, player_hunger_bar)
+    if player_hunger == 100:
+        pass_out(2)
 
 def player_thirst_bar():
     global player_thirst, thirst_bar
     x_lim = 500-player_thirst*2
     canvas.coords(thirst_bar, 300, 410, x_lim, 440)
     canvas.after(100, player_thirst_bar)
+    if player_thirst == 100:
+        pass_out(3)
 
 def player_sober_bar():
     global player_sober, sober_bar
     x_lim = player_sober*2 + 550
     canvas.coords(sober_bar, 550, 410, x_lim, 440)
     canvas.after(100, player_sober_bar)
+    if player_sober > 100:
+        pass_out(1)
+
+def pass_out(type_of_pass_out):
+    global assets_UI, player_money, player_sober, player_hunger, player_thirst, player_loan_amount
+    clean_UI()
+    cover = canvas.create_rectangle(0, 0, 800, 500, fill="black")
+    if type_of_pass_out == 1:
+        text = canvas.create_text(400, 200, text="You passed out drunk", fill="white", font=("Helvetica", 30, "bold"))
+        text1 = canvas.create_text(400, 250, text="You were also a little silly while being drunk...", fill="white", font=("Helvetica", 17, "bold"))
+        if player_money <= 0:
+            player_money += 148142
+        elif player_money > 0 and player_money < 10000:
+            player_money += 1234513
+        else:
+            player_money = 103
+        player_sober = 35
+    elif type_of_pass_out == 2:
+        text = canvas.create_text(400, 200, text="You passed out from starvation", fill="white", font=("Helvetica", 30, "bold"))
+        if player_money > 4000:
+            text1 = canvas.create_text(400, 250, text="You have paid the hospital bills", fill="white", font=("Helvetica", 17, "bold"))
+            player_money -= 4000
+        else:
+            text1 = canvas.create_text(400, 250, text="You have taken out a loan for the hospital bills", fill="white", font=("Helvetica", 17, "bold"))
+            player_loan_amount += 4000
+        player_hunger = 15
+    elif type_of_pass_out == 3:
+        text = canvas.create_text(400, 200, text="You passed out from dehydration", fill="white", font=("Helvetica", 30, "bold"))
+        if player_money > 4000:
+            text1 = canvas.create_text(400, 250, text="You have paid the hospital bills", fill="white", font=("Helvetica", 17, "bold"))
+            player_money -= 4000
+        else:
+            text1 = canvas.create_text(400, 250, text="You have taken out a loan for the hospital bills", fill="white", font=("Helvetica", 17, "bold"))
+            player_loan_amount += 4000
+        player_thirst = 15
+    assets_UI.append(cover)
+    assets_UI.append(text1)
+    assets_UI.append(text)
+    canvas.after(5000, remove_pass_out_screen)
+
+def remove_pass_out_screen():
+    global player_name, game_selected
+    game_selected = None
+    canvas.itemconfig(main_text, text=f"Welcome back, {player_name}")
+    clean_UI()
 
 def player_stats_update():
     global player_sober, player_thirst, player_hunger
     if player_sober > 0.5:
-        player_sober -= 0.5
+        player_sober -= 1
     else:
         player_sober = 0
     if player_thirst < 99.5:
@@ -451,8 +498,8 @@ def slots_game():
     clean_UI()
     slot_machine = canvas.create_rectangle(100, 0, 700, 400, fill="silver")
     slot_puller_1 = canvas.create_rectangle(625, 100, 675, 300, fill="black")
-    slot_puller_2 = canvas.create_rectangle(645, 230, 655, 125, fill="red")
-    slot_puller_3 = canvas.create_oval(635, 145, 665, 115, fill="gold")
+    slot_puller_2 = canvas.create_rectangle(645, 230, 655, 125, fill="red", tags="roll")
+    slot_puller_3 = canvas.create_oval(635, 145, 665, 115, fill="gold", tags="roll")
     slot_extra_UI.append(slot_puller_3)
     slot_extra_UI.append(slot_puller_2)
     slot_extra_UI.append(slot_puller_1)
@@ -1136,7 +1183,7 @@ def check_dealer_hand(player_hand_value):
 
 def money_update():
     """Updates the money and leaderboard"""
-    global player_money, money_text, highest_money, player_name, total_assets, player_stock_amount, player_bank_amount, player_loan_amount, player_loan_max
+    global player_money, money_text, highest_money, player_name, stock_prices, total_assets, player_stock_amount, player_bank_amount, player_loan_amount, player_loan_max, player_assets
     if player_money > 0:
         player_money = int(player_money)
         formatted = round(player_money, 2)
@@ -1146,9 +1193,12 @@ def money_update():
         canvas.itemconfig(money_text, text=f"Bankrupt", fill="red")
     else:
         canvas.itemconfig(money_text, text=f"Out of money", fill="red")
-    if player_money > highest_money:
-        highest_money = player_money
-        update_score(player_name, highest_money - 100)
+    asset_value = 0
+    for i in player_assets:
+        asset_value += i["value"] * i["amount"]
+    if player_money+asset_value+(player_stock_amount*stock_prices[-1])+player_bank_amount-player_loan_amount > highest_money:
+        highest_money = player_money+(player_stock_amount*stock_prices[-1])+asset_value+player_bank_amount-player_loan_amount
+        update_score(player_name, highest_money)
     root.after(50, money_update)
 
 def animate_chip(chip, target_x, target_y, steps=20, delay=20, delete_after=False):
@@ -1551,16 +1601,17 @@ def on_click(event):
     elif "item_buy" in tags and game_selected == "food":
         for item in store_items:
             if item["name"] == tags[1]:
-                player_money -= item["price"]
-                if player_hunger - item["hunger"] < 0:
-                    player_hunger = 0
-                else:
-                    player_hunger -= item["hunger"]
-                if player_thirst - item["thirst"] < 0:
-                    player_thirst = 0
-                else:
-                    player_thirst -= item["thirst"]
-                player_sober += item["sober"]
+                if player_money >= item["price"]:
+                    player_money -= item["price"]
+                    if player_hunger - item["hunger"] < 0:
+                        player_hunger = 0
+                    else:
+                        player_hunger -= item["hunger"]
+                    if player_thirst - item["thirst"] < 0:
+                        player_thirst = 0
+                    else:
+                        player_thirst -= item["thirst"]
+                    player_sober += item["sober"]
     
 
 def bank_menu():
